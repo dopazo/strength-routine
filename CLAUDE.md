@@ -17,8 +17,9 @@ Vite 6 + React 19 + Tailwind CSS v4 (`@tailwindcss/vite` plugin) + Three.js. Bun
 
 ## Hosting
 
-- **Cloudflare Pages**: build `bun run build`, output `dist`. Default `base` works.
-- **GitHub Pages** under `<user>.github.io/<repo>/`: uncomment the `base` line in `vite.config.js`.
+Deployed to **GitHub Pages** at `dopazo.github.io/strength-routine/` via `.github/workflows/deploy.yml` — auto-deploys on push to `main` (`bun install` → `bun run build` → publishes `dist/`). `vite.config.js` sets `base: '/strength-routine/'` to match the repo subpath.
+
+For Cloudflare Pages or root-domain hosting, remove the `base` line.
 
 ## Architecture
 
