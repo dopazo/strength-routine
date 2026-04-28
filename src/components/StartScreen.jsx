@@ -48,7 +48,7 @@ export function StartScreen({ onStart }) {
                         <div className="text-xs text-neutral-500">{ex.muscles}</div>
                       </div>
                       <div className="text-xs font-mono text-neutral-400 tabular-nums">
-                        {item.sets}×{item.reps}
+                        {item.sets}×{item.workSec}s
                       </div>
                     </div>
                   );
