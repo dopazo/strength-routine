@@ -12,18 +12,34 @@ const PHASE_COLORS = {
 
 function PrevIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <polygon points="19 20 9 12 19 4 19 20" />
-      <line x1="5" y1="19" x2="5" y2="5" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
     </svg>
   );
 }
 
 function NextIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <polygon points="5 4 15 12 5 20 5 4" />
-      <line x1="19" y1="5" x2="19" y2="19" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 6 15 12 9 18" />
+    </svg>
+  );
+}
+
+function PrevExerciseIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 18 11 12 17 6" />
+      <polyline points="11 18 5 12 11 6" />
+    </svg>
+  );
+}
+
+function NextExerciseIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="7 6 13 12 7 18" />
+      <polyline points="13 6 19 12 13 18" />
     </svg>
   );
 }
@@ -116,11 +132,29 @@ export function WorkoutScreen({ state, dispatch }) {
         </div>
 
         <div className="px-5 pb-5 pt-2">
+          <div className="flex items-center justify-center gap-8 mb-3">
+            <button
+              onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
+              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 hover:text-neutral-300 transition-colors"
+              aria-label="Ejercicio anterior"
+            >
+              <PrevExerciseIcon />
+              <span>Ejercicio</span>
+            </button>
+            <button
+              onClick={() => dispatch({ type: 'NEXT_EXERCISE' })}
+              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 hover:text-neutral-300 transition-colors"
+              aria-label="Ejercicio siguiente"
+            >
+              <span>Ejercicio</span>
+              <NextExerciseIcon />
+            </button>
+          </div>
           <div className="flex items-center justify-between gap-3">
             <button
               onClick={() => dispatch({ type: 'PREV' })}
               className="flex-1 py-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
-              aria-label="Anterior"
+              aria-label="Repetición anterior"
             >
               <PrevIcon />
             </button>
@@ -137,7 +171,7 @@ export function WorkoutScreen({ state, dispatch }) {
             <button
               onClick={() => dispatch({ type: 'NEXT' })}
               className="flex-1 py-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
-              aria-label="Saltar"
+              aria-label="Repetición siguiente"
             >
               <NextIcon />
             </button>

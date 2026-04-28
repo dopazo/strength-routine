@@ -13,6 +13,40 @@ export function getInitialState() {
   };
 }
 
+function elapsedAt(exerciseIdx, set, phase) {
+  let e = 0;
+  for (let i = 0; i < exerciseIdx; i++) {
+    const r = ROUTINE[i];
+    e += r.sets * r.workSec + (r.sets - 1) * r.restSec + TRANSITION_SEC;
+  }
+  const r = ROUTINE[exerciseIdx];
+  if (phase === 'work') {
+    e += (set - 1) * (r.workSec + r.restSec);
+  } else if (phase === 'rest') {
+    e += set * r.workSec + (set - 1) * r.restSec;
+  } else if (phase === 'transition') {
+    e += r.sets * r.workSec + (r.sets - 1) * r.restSec;
+  }
+  return e;
+}
+
+function jumpTo(state, exerciseIdx, set, phase) {
+  const r = ROUTINE[exerciseIdx];
+  let timeRemaining;
+  if (phase === 'work') timeRemaining = r.workSec;
+  else if (phase === 'rest') timeRemaining = r.restSec;
+  else timeRemaining = TRANSITION_SEC;
+  return {
+    ...state,
+    exerciseIdx,
+    set,
+    phase,
+    timeRemaining,
+    totalElapsed: elapsedAt(exerciseIdx, set, phase),
+    isComplete: false,
+  };
+}
+
 function advancePhase(state) {
   const ex = ROUTINE[state.exerciseIdx];
   if (state.phase === 'work') {
@@ -56,22 +90,33 @@ export function workoutReducer(state, action) {
       return advancePhase({ ...state, totalElapsed: jumped });
     }
     case 'PREV': {
-      let newIdx = state.exerciseIdx;
-      if (state.set === 1 && state.phase === 'work') newIdx = Math.max(0, newIdx - 1);
-      let elapsedAtStart = 0;
-      for (let i = 0; i < newIdx; i++) {
-        const r = ROUTINE[i];
-        elapsedAtStart += r.sets * r.workSec + (r.sets - 1) * r.restSec + TRANSITION_SEC;
+      const ex = ROUTINE[state.exerciseIdx];
+      if (state.phase === 'rest') {
+        return jumpTo(state, state.exerciseIdx, state.set, 'work');
       }
-      return {
-        ...state,
-        exerciseIdx: newIdx,
-        set: 1,
-        phase: 'work',
-        timeRemaining: ROUTINE[newIdx].workSec,
-        totalElapsed: elapsedAtStart,
-        isComplete: false,
-      };
+      if (state.phase === 'transition') {
+        return jumpTo(state, state.exerciseIdx, ex.sets, 'work');
+      }
+      if (state.set > 1) {
+        return jumpTo(state, state.exerciseIdx, state.set - 1, 'work');
+      }
+      if (state.exerciseIdx > 0) {
+        const prev = ROUTINE[state.exerciseIdx - 1];
+        return jumpTo(state, state.exerciseIdx - 1, prev.sets, 'work');
+      }
+      return jumpTo(state, 0, 1, 'work');
+    }
+    case 'NEXT_EXERCISE': {
+      if (state.isComplete) return state;
+      if (state.exerciseIdx >= ROUTINE.length - 1) return state;
+      return jumpTo(state, state.exerciseIdx + 1, 1, 'work');
+    }
+    case 'PREV_EXERCISE': {
+      if (!(state.set === 1 && state.phase === 'work')) {
+        return jumpTo(state, state.exerciseIdx, 1, 'work');
+      }
+      if (state.exerciseIdx === 0) return state;
+      return jumpTo(state, state.exerciseIdx - 1, 1, 'work');
     }
     case 'RESTART':
       return { ...getInitialState(), isStarted: true };
