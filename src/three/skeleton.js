@@ -78,8 +78,13 @@ export function buildSkeleton(scene, material) {
   };
 }
 
+// Offset Y aplicado al root para que los pies queden al ras del suelo (y=0).
+// El esqueleto mide 1.30 desde el root hasta la planta del pie (0.35 cadera + 0.5 muslo + 0.45 pierna),
+// así que rootPos.y = 1.0 (parado) + 0.30 = 1.30 deja el pie en y=0.
+const ROOT_Y_OFFSET = 0.30;
+
 export function applyPose(joints, pose) {
-  joints.root.position.set(...pose.rootPos);
+  joints.root.position.set(pose.rootPos[0], pose.rootPos[1] + ROOT_Y_OFFSET, pose.rootPos[2]);
   joints.root.rotation.set(...pose.rootRot);
   joints.torso.rotation.set(...pose.torsoRot);
   joints.shoulderL.rotation.set(...pose.shoulderL);

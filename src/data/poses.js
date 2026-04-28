@@ -102,18 +102,32 @@ export const POSES = {
     elbowL: [d(-5), 0, 0], elbowR: [d(-5), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(20), 0, 0], kneeR: [d(20), 0, 0],
   },
-  // Woodchopper diagonal: pisa banda con un pie a un lado, manos juntas
-  // recorren diagonal abajo→arriba al lado opuesto.
-  woodchopLow: {
-    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(15), d(20), d(15)],
-    shoulderL: [d(-30), 0, d(-15)], shoulderR: [d(-30), 0, d(15)],
-    elbowL: [d(-30), 0, 0], elbowR: [d(-30), 0, 0],
+  // Woodchopper diagonal: pie pisa la banda y las manos van juntas al frente
+  // del torso (shoulders fijos forward + ligero z inverso para que las manos
+  // se acerquen al centro). El movimiento viene de la rotación + lean del torso.
+  // L y R son espejo: pie izquierdo pisa → twist hacia izq abajo → arriba der.
+  woodchopL_Low: {
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(35), d(25), d(20)],
+    shoulderL: [d(-90), 0, d(20)], shoulderR: [d(-90), 0, d(-20)],
+    elbowL: [d(-15), 0, 0], elbowR: [d(-15), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },
-  woodchopHigh: {
-    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(-15), d(-10), d(-15)],
-    shoulderL: [d(-130), 0, d(-25)], shoulderR: [d(-130), 0, d(25)],
-    elbowL: [d(-10), 0, 0], elbowR: [d(-10), 0, 0],
+  woodchopL_High: {
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(-10), d(-30), d(-15)],
+    shoulderL: [d(-90), 0, d(20)], shoulderR: [d(-90), 0, d(-20)],
+    elbowL: [d(-15), 0, 0], elbowR: [d(-15), 0, 0],
+    hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
+  },
+  woodchopR_Low: {
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(35), d(-25), d(-20)],
+    shoulderL: [d(-90), 0, d(20)], shoulderR: [d(-90), 0, d(-20)],
+    elbowL: [d(-15), 0, 0], elbowR: [d(-15), 0, 0],
+    hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
+  },
+  woodchopR_High: {
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(-10), d(30), d(15)],
+    shoulderL: [d(-90), 0, d(20)], shoulderR: [d(-90), 0, d(-20)],
+    elbowL: [d(-15), 0, 0], elbowR: [d(-15), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },
   lateralDown: {

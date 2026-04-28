@@ -58,6 +58,10 @@ export function createBandRenderer(scene) {
       const handMid = getWorld(joints.handL).add(getWorld(joints.handR)).multiplyScalar(0.5);
       const feetMid = getWorld(joints.footL).add(getWorld(joints.footR)).multiplyScalar(0.5);
       drawSegment(handMid, feetMid, cfg.naturalLength);
+    } else if (cfg.type === 'oneFoot_to_handMid') {
+      const foot = cfg.foot === 'L' ? joints.footL : joints.footR;
+      const handMid = getWorld(joints.handL).add(getWorld(joints.handR)).multiplyScalar(0.5);
+      drawSegment(getWorld(foot), handMid, cfg.naturalLength);
     } else if (cfg.type === 'anchored_side') {
       const anchor = new THREE.Vector3(...cfg.anchorPos);
       anchorMesh.position.copy(anchor);

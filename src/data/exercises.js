@@ -60,13 +60,21 @@ export const EXERCISES = {
     duration: 3.0,
     band: { type: 'footToHand_dual', naturalLength: 0.5 },
   },
-  woodchopper: {
-    name: 'Woodchopper diagonal',
+  woodchopperL: {
+    name: 'Woodchopper diagonal (izq.)',
     muscles: 'Core · Oblicuos',
-    instructions: 'Pisa un extremo de la banda con un pie. Toma el otro extremo con ambas manos a la altura de la cadera opuesta y súbelo en diagonal hasta el hombro contrario.',
-    keyframes: ['woodchopLow', 'woodchopHigh', 'woodchopLow'],
+    instructions: 'Pisa un extremo de la banda con el pie izquierdo. Toma el otro extremo con ambas manos a la altura de la cadera izquierda y súbelo en diagonal hasta arriba del hombro derecho.',
+    keyframes: ['woodchopL_Low', 'woodchopL_High', 'woodchopL_Low'],
     duration: 3.0,
-    band: { type: 'footToHand_dual', naturalLength: 0.8 },
+    band: { type: 'oneFoot_to_handMid', foot: 'L', naturalLength: 0.9 },
+  },
+  woodchopperR: {
+    name: 'Woodchopper diagonal (der.)',
+    muscles: 'Core · Oblicuos',
+    instructions: 'Pisa un extremo de la banda con el pie derecho. Toma el otro extremo con ambas manos a la altura de la cadera derecha y súbelo en diagonal hasta arriba del hombro izquierdo.',
+    keyframes: ['woodchopR_Low', 'woodchopR_High', 'woodchopR_Low'],
+    duration: 3.0,
+    band: { type: 'oneFoot_to_handMid', foot: 'R', naturalLength: 0.9 },
   },
   lateral: {
     name: 'Elevación lateral',
