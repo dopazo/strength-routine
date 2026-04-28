@@ -31,3 +31,6 @@ npm-debug.log*
 
 # Playwright
 .playwright-cli/*
+
+# Claude local
+.claude/settings.local.json
