@@ -105,14 +105,14 @@ export const POSES = {
   // Woodchopper diagonal: pisa banda con un pie a un lado, manos juntas
   // recorren diagonal abajo→arriba al lado opuesto.
   woodchopLow: {
-    rootPos: [0, 1.0, 0], rootRot: [0, d(20), 0], torsoRot: [d(15), 0, d(15)],
-    shoulderL: [d(-25), 0, d(-25)], shoulderR: [d(-25), 0, d(-15)],
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(15), d(20), d(15)],
+    shoulderL: [d(-30), 0, d(-15)], shoulderR: [d(-30), 0, d(15)],
     elbowL: [d(-30), 0, 0], elbowR: [d(-30), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },
   woodchopHigh: {
-    rootPos: [0, 1.0, 0], rootRot: [0, d(-10), 0], torsoRot: [d(-15), 0, d(-15)],
-    shoulderL: [d(-110), 0, d(40)], shoulderR: [d(-110), 0, d(50)],
+    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [d(-15), d(-10), d(-15)],
+    shoulderL: [d(-130), 0, d(-25)], shoulderR: [d(-130), 0, d(25)],
     elbowL: [d(-10), 0, 0], elbowR: [d(-10), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },

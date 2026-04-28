@@ -31,6 +31,7 @@ function buildArm(parent, side, material) {
 function buildLeg(parent, side, material) {
   const sx = side === 'L' ? -1 : 1;
   const hip = new THREE.Group();
+  // Cadera ubicada respecto al root (mismo y que la base del torso, ancho de hombros / 2).
   hip.position.set(sx * 0.15, -0.35, 0);
   parent.add(hip);
   const thigh = makeBone(material, 0.5, 0.07);
@@ -61,8 +62,10 @@ export function buildSkeleton(scene, material) {
 
   const armL = buildArm(torso, 'L', material);
   const armR = buildArm(torso, 'R', material);
-  const legL = buildLeg(torso, 'L', material);
-  const legR = buildLeg(torso, 'R', material);
+  // Las piernas cuelgan del root (no del torso). Si fueran hijas del torso,
+  // bisagras de cadera (RDL/remo/kickback) rotarían toda la figura.
+  const legL = buildLeg(root, 'L', material);
+  const legR = buildLeg(root, 'R', material);
 
   return {
     root, torso,
