@@ -72,7 +72,7 @@ export function WorkoutScreen({ state, dispatch }) {
 
   let phaseLabel;
   if (state.phase === 'work') phaseLabel = `SERIE ${state.set} / ${current.sets}`;
-  else if (state.phase === 'rest') phaseLabel = `DESCANSO · próx. serie ${state.set + 1}`;
+  else if (state.phase === 'rest') phaseLabel = `DESCANSO · próx. serie ${state.set + 1}/${current.sets}`;
   else phaseLabel = `TRANSICIÓN · próx. ${nextEx.name}`;
 
   const overallProgress = (state.totalElapsed / TOTAL_DURATION) * 100;
@@ -116,24 +116,26 @@ export function WorkoutScreen({ state, dispatch }) {
           <p className="text-sm text-neutral-400 mt-1.5 leading-snug">{exercise.instructions}</p>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-5 py-2">
-          <div className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-1.5 ${phaseStyle.text}`}>
+        <div className="flex flex-col items-center px-5 py-1">
+          <div className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-1 ${phaseStyle.text}`}>
             {phaseStyle.label}
           </div>
           <div className="font-mono font-light tabular-nums text-[64px] leading-none">
             {formatTime(state.timeRemaining)}
           </div>
-          <div className="text-[11px] text-neutral-500 mt-1.5 font-mono uppercase tracking-widest">
-            {phaseLabel}
+          <div className="mt-1 flex items-center gap-2 leading-none">
+            <span className="text-[11px] text-neutral-500 font-mono uppercase tracking-widest">
+              {phaseLabel}
+            </span>
+            {state.phase === 'work' && (
+              <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 rounded-full text-[11px] font-mono text-neutral-300">
+                {current.workSec}s
+              </span>
+            )}
           </div>
-          {state.phase === 'work' && (
-            <div className="mt-1.5 px-3 py-0.5 bg-neutral-900 border border-neutral-800 rounded-full">
-              <span className="text-xs font-mono text-neutral-300">{current.reps} reps</span>
-            </div>
-          )}
         </div>
 
-        <div className="px-5 pb-3 pt-1">
+        <div className="mt-auto px-5 pb-3 pt-2">
           <div className="flex items-center justify-between gap-3 mb-2 px-1 min-h-[18px]">
             <div className="flex-1 flex justify-start min-w-0">
               {prevEx && (
