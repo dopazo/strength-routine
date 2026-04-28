@@ -82,8 +82,12 @@ export const POSES = {
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },
   rowPull: {
+    // Remo: hombros se EXTIENDEN (shoulder.x positivo) para llevar el codo
+    // detrás del cuerpo, mientras el codo se flexiona para acercar la mano
+    // a la cintura. Antes shoulder.x era -25° y solo flexionaba el codo,
+    // por eso parecía curl en vez de remo.
     rootPos: [0, 0.92, 0], rootRot: [0, 0, 0], torsoRot: [d(50), 0, 0],
-    shoulderL: [d(-25), 0, d(-15)], shoulderR: [d(-25), 0, d(15)],
+    shoulderL: [d(45), 0, d(-15)], shoulderR: [d(45), 0, d(15)],
     elbowL: [d(-110), 0, 0], elbowR: [d(-110), 0, 0],
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
   },

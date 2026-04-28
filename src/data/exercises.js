@@ -7,6 +7,7 @@ export const EXERCISES = {
   pullApart: {
     name: 'Pull-apart',
     muscles: 'Hombros · Espalda alta',
+    works: ['upperBack', 'shoulderCapL', 'shoulderCapR'],
     instructions: 'Sostén la banda al frente, brazos extendidos a la altura del pecho. Tira hacia los lados juntando los omóplatos.',
     keyframes: ['pullApartClosed', 'pullApartOpen', 'pullApartClosed'],
     duration: 2.5,
@@ -15,6 +16,7 @@ export const EXERCISES = {
   press: {
     name: 'Press de hombro',
     muscles: 'Hombros · Tríceps',
+    works: ['shoulderCapL', 'shoulderCapR'],
     instructions: 'Pisa el centro de la banda. Lleva las manos desde los hombros hasta extender los brazos arriba.',
     keyframes: ['pressDown', 'pressUp', 'pressDown'],
     duration: 2.5,
@@ -23,6 +25,7 @@ export const EXERCISES = {
   tricep: {
     name: 'Tríceps kickback',
     muscles: 'Tríceps',
+    works: ['tricepsL', 'tricepsR'],
     instructions: 'Pisa la banda. Inclínate adelante con rodillas algo flexionadas, codos pegados al cuerpo. Estira los codos llevando las manos atrás.',
     keyframes: ['tricepKickbackStart', 'tricepKickbackEnd', 'tricepKickbackStart'],
     duration: 2.5,
@@ -31,6 +34,7 @@ export const EXERCISES = {
   row: {
     name: 'Remo encorvado',
     muscles: 'Espalda · Bíceps',
+    works: ['upperBack', 'bicepsL', 'bicepsR'],
     instructions: 'Pisa la banda. Inclínate adelante con espalda recta. Tira los codos atrás llevando las manos a la cintura.',
     keyframes: ['rowStart', 'rowPull', 'rowStart'],
     duration: 2.5,
@@ -39,6 +43,7 @@ export const EXERCISES = {
   curl: {
     name: 'Curl de bíceps',
     muscles: 'Bíceps',
+    works: ['bicepsL', 'bicepsR'],
     instructions: 'Pisa el centro de la banda. Brazos pegados al cuerpo, palmas adelante. Flexiona los codos hasta los hombros.',
     keyframes: ['curlDown', 'curlUp', 'curlDown'],
     duration: 2.5,
@@ -47,6 +52,7 @@ export const EXERCISES = {
   squat: {
     name: 'Sentadilla',
     muscles: 'Cuádriceps · Glúteos',
+    works: ['thighL', 'thighR'],
     instructions: 'Pisa la banda con ancho de hombros. Pasa las manos sobre los hombros sosteniendo la banda. Baja como sentándote.',
     keyframes: ['squatUp', 'squatDown', 'squatUp'],
     duration: 3.0,
@@ -55,6 +61,7 @@ export const EXERCISES = {
   rdl: {
     name: 'Peso muerto rumano',
     muscles: 'Isquios · Glúteos · Espalda baja',
+    works: ['thighL', 'thighR', 'upperBack'],
     instructions: 'Pisa la banda, sostén los extremos al frente de los muslos. Empuja la cadera atrás manteniendo espalda recta.',
     keyframes: ['rdlUp', 'rdlDown', 'rdlUp'],
     duration: 3.0,
@@ -63,6 +70,7 @@ export const EXERCISES = {
   woodchopperL: {
     name: 'Woodchopper diagonal (izq.)',
     muscles: 'Core · Oblicuos',
+    works: ['chest', 'upperBack'],
     instructions: 'Pisa un extremo de la banda con el pie izquierdo. Toma el otro extremo con ambas manos a la altura de la cadera izquierda y súbelo en diagonal hasta arriba del hombro derecho.',
     keyframes: ['woodchopL_Low', 'woodchopL_High', 'woodchopL_Low'],
     duration: 3.0,
@@ -71,6 +79,7 @@ export const EXERCISES = {
   woodchopperR: {
     name: 'Woodchopper diagonal (der.)',
     muscles: 'Core · Oblicuos',
+    works: ['chest', 'upperBack'],
     instructions: 'Pisa un extremo de la banda con el pie derecho. Toma el otro extremo con ambas manos a la altura de la cadera derecha y súbelo en diagonal hasta arriba del hombro izquierdo.',
     keyframes: ['woodchopR_Low', 'woodchopR_High', 'woodchopR_Low'],
     duration: 3.0,
@@ -79,6 +88,7 @@ export const EXERCISES = {
   lateral: {
     name: 'Elevación lateral',
     muscles: 'Hombros (deltoides medio)',
+    works: ['shoulderCapL', 'shoulderCapR'],
     instructions: 'Pisa la banda, extremos en cada mano a los lados. Eleva los brazos rectos hasta la altura de los hombros.',
     keyframes: ['lateralDown', 'lateralUp', 'lateralDown'],
     duration: 2.5,

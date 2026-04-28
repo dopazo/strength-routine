@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { EXERCISES } from '../data/exercises.js';
 import { POSES } from '../data/poses.js';
 import { blendPose } from '../utils.js';
-import { applyPose, buildSkeleton } from '../three/skeleton.js';
+import { applyPose, applyTint, buildSkeleton } from '../three/skeleton.js';
 import { createBandRenderer } from '../three/bandRenderer.js';
 
 export function ExerciseViewer({ exerciseId, paused }) {
@@ -58,6 +58,10 @@ export function ExerciseViewer({ exerciseId, paused }) {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc4c4c4, roughness: 0.55, metalness: 0.1 });
     const joints = buildSkeleton(scene, bodyMat);
     const bands = createBandRenderer(scene);
+
+    // Colores reusados cada frame para el tinte muscular durante la tensión.
+    const baseColor = new THREE.Color(0xc4c4c4);
+    const tintColor = new THREE.Color(0xd06060);
 
     // Órbita de cámara con drag (mouse/touch) + zoom con rueda.
     let camAngle = 0.45, camHeight = 1.5, camDist = 4;
@@ -120,6 +124,9 @@ export function ExerciseViewer({ exerciseId, paused }) {
           eased,
         );
         applyPose(joints, pose);
+        // Tensión 0→1→0 a lo largo del ciclo [A, B, A]: pico en pose B.
+        const tension = segIdx === 0 ? eased : 1 - eased;
+        applyTint(joints.meshes, exercise.works ?? [], tension, baseColor, tintColor);
         scene.updateMatrixWorld(true);
         bands.render(exercise, joints);
       }
@@ -149,6 +156,7 @@ export function ExerciseViewer({ exerciseId, paused }) {
       bands.dispose();
       renderer.dispose();
       bodyMat.dispose();
+      Object.values(joints.meshes).forEach((m) => m.material.dispose());
       if (canvas.parentNode === container) container.removeChild(canvas);
     };
   }, []);
