@@ -47,6 +47,7 @@ Builds the scene **once** in a `useEffect([])`. Props (`exerciseId`, `paused`) a
 
 ### Screens (`src/components/`)
 `StartScreen`, `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete`. `WorkoutScreen` is the only consumer of `ExerciseViewer`.
+In mobile, entire screen with no scroll.
 
 ## Adding an exercise
 
