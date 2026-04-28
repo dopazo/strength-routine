@@ -57,7 +57,11 @@ export const POSES = {
     hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(5), 0, 0], kneeR: [d(5), 0, 0],
   },
   squatDown: {
-    rootPos: [0, 0.6, 0], rootRot: [0, 0, 0], torsoRot: [d(25), 0, 0],
+    // rootPos.y/z están calculados para que con hipRot=-90° y kneeRot=110° los
+    // pies queden plantados en el mismo (y≈0, z≈0) que en squatUp en vez de
+    // flotar y desplazarse hacia adelante. La cadera baja y retrocede (como
+    // una sentadilla real "sentándose atrás") mientras las rodillas avanzan.
+    rootPos: [0, 0.475, -0.385], rootRot: [0, 0, 0], torsoRot: [d(25), 0, 0],
     shoulderL: [d(-15), 0, d(-15)], shoulderR: [d(-15), 0, d(15)],
     elbowL: [d(-150), 0, 0], elbowR: [d(-150), 0, 0],
     hipL: [d(-90), 0, 0], hipR: [d(-90), 0, 0],
