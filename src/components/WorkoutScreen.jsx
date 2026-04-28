@@ -80,8 +80,8 @@ export function WorkoutScreen({ state, dispatch }) {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1">
-        <header className="px-5 pt-5 pb-3">
-          <div className="flex items-center justify-between mb-3">
+        <header className="px-5 pt-3 pb-2">
+          <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">{current.phase}</div>
               <div className="text-xs text-neutral-400 mt-0.5 tabular-nums">Ejercicio {state.exerciseIdx + 1} / {ROUTINE.length}</div>
@@ -102,7 +102,7 @@ export function WorkoutScreen({ state, dispatch }) {
         </header>
 
         <div className="px-5 pb-2">
-          <div className="relative bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden" style={{ height: '280px' }}>
+          <div className="relative bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden" style={{ height: '230px' }}>
             <ExerciseViewer exerciseId={current.exerciseId} paused={state.isPaused} />
             <div className="absolute top-3 left-3 text-[9px] font-mono text-neutral-500 tracking-wider">
               ARRASTRA · ROTAR
@@ -110,31 +110,31 @@ export function WorkoutScreen({ state, dispatch }) {
           </div>
         </div>
 
-        <div className="px-5 py-3">
-          <h2 className="text-2xl font-light tracking-tight">{exercise.name}</h2>
+        <div className="px-5 py-2">
+          <h2 className="text-xl font-light tracking-tight">{exercise.name}</h2>
           <div className="text-xs text-neutral-500 mt-0.5">{exercise.muscles}</div>
-          <p className="text-sm text-neutral-400 mt-2 leading-relaxed">{exercise.instructions}</p>
+          <p className="text-sm text-neutral-400 mt-1.5 leading-snug">{exercise.instructions}</p>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-5 py-4">
-          <div className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-3 ${phaseStyle.text}`}>
+        <div className="flex-1 flex flex-col items-center justify-center px-5 py-2">
+          <div className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-1.5 ${phaseStyle.text}`}>
             {phaseStyle.label}
           </div>
-          <div className="font-mono font-light tabular-nums text-[88px] leading-none">
+          <div className="font-mono font-light tabular-nums text-[64px] leading-none">
             {formatTime(state.timeRemaining)}
           </div>
-          <div className="text-xs text-neutral-500 mt-3 font-mono uppercase tracking-widest">
+          <div className="text-[11px] text-neutral-500 mt-1.5 font-mono uppercase tracking-widest">
             {phaseLabel}
           </div>
           {state.phase === 'work' && (
-            <div className="mt-3 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full">
+            <div className="mt-1.5 px-3 py-0.5 bg-neutral-900 border border-neutral-800 rounded-full">
               <span className="text-xs font-mono text-neutral-300">{current.reps} reps</span>
             </div>
           )}
         </div>
 
-        <div className="px-5 pb-5 pt-2">
-          <div className="flex items-center justify-between gap-3 mb-3 px-1 min-h-[20px]">
+        <div className="px-5 pb-3 pt-1">
+          <div className="flex items-center justify-between gap-3 mb-2 px-1 min-h-[18px]">
             <div className="flex-1 flex justify-start min-w-0">
               {prevEx && (
                 <button
@@ -163,14 +163,14 @@ export function WorkoutScreen({ state, dispatch }) {
           <div className="flex items-center justify-between gap-3">
             <button
               onClick={() => dispatch({ type: 'PREV' })}
-              className="flex-1 py-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
+              className="flex-1 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
               aria-label="Repetición anterior"
             >
               <PrevIcon />
             </button>
             <button
               onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })}
-              className={`flex-[2] py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-[2] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
                 state.isPaused
                   ? 'bg-lime-400 hover:bg-lime-300 text-neutral-950'
                   : 'bg-neutral-100 hover:bg-white text-neutral-950'
@@ -180,13 +180,13 @@ export function WorkoutScreen({ state, dispatch }) {
             </button>
             <button
               onClick={() => dispatch({ type: 'NEXT' })}
-              className="flex-1 py-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
+              className="flex-1 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
               aria-label="Repetición siguiente"
             >
               <NextIcon />
             </button>
           </div>
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-neutral-900">
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-900">
             <button
               onClick={() => dispatch({ type: 'TO_HOME' })}
               className="text-xs text-neutral-500 hover:text-neutral-300 font-mono uppercase tracking-wider"
