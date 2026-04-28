@@ -26,7 +26,7 @@ function tone(freq, duration, gain) {
 }
 
 export function playCountdownBeep() {
-  tone(440, 0.12, 0.18);
+  tone(440, 0.24, 0.18);
 }
 
 export function playPhaseChangeBeep() {
