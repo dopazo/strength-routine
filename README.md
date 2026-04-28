@@ -1,8 +1,12 @@
 # Rutina de Fuerza con Elásticos
 
-Strength-training routine app for **flat open resistance bands** (therapy bands — long flat strips, no handles). Designed to train the major muscle groups when free weights aren't available. UI is in Spanish; this README is in English.
+Strength-training routine app for **flat open resistance bands** (therapy bands — long flat strips, no handles). Designed to train the major muscle groups and help maintain endurance. UI is in Spanish.
 
 Every exercise is rendered in 3D with an animated skeleton, and the band is drawn with tension-reactive color (lime → red as it stretches).
+
+<img src="docs/start-screen.png" alt="Routine overview" width="600" />
+
+<img src="docs/workout-screen.png" alt="Workout view with 3D viewer" width="600" />
 
 ## Stack
 
