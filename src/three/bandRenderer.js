@@ -62,6 +62,12 @@ export function createBandRenderer(scene) {
       const foot = cfg.foot === 'L' ? joints.footL : joints.footR;
       const handMid = getWorld(joints.handL).add(getWorld(joints.handR)).multiplyScalar(0.5);
       drawSegment(getWorld(foot), handMid, cfg.naturalLength);
+    } else if (cfg.type === 'handToHand_overHip') {
+      // Banda cruza por encima de la cadera; cada mitad va de una mano al root.
+      // Al subir la cadera (hip thrust) el root se aleja de las manos → estira.
+      const hip = getWorld(joints.root);
+      drawSegment(getWorld(joints.handL), hip, cfg.naturalLength);
+      drawSegment(hip, getWorld(joints.handR), cfg.naturalLength);
     } else if (cfg.type === 'anchored_side') {
       const anchor = new THREE.Vector3(...cfg.anchorPos);
       anchorMesh.position.copy(anchor);

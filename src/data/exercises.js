@@ -3,6 +3,7 @@
 //   footToHand_dual   — un tramo por lado, del pie a la mano
 //   overhead_to_feet  — manos sobre la cabeza, banda baja al centro de los pies
 //   anchored_side     — anclada a un punto fijo (anchorPos)
+//   handToHand_overHip — banda cruza por encima de la cadera, extremos en cada mano
 export const EXERCISES = {
   pullApart: {
     name: 'Pull-apart',
@@ -58,14 +59,14 @@ export const EXERCISES = {
     duration: 3.0,
     band: { type: 'footToHand_dual', naturalLength: 0.7 },
   },
-  rdl: {
-    name: 'Peso muerto rumano',
-    muscles: 'Isquios · Glúteos · Espalda baja',
-    works: ['thighL', 'thighR', 'upperBack'],
-    instructions: 'Pisa la banda, sostén los extremos al frente de los muslos. Empuja la cadera atrás manteniendo espalda recta.',
-    keyframes: ['rdlUp', 'rdlDown', 'rdlUp'],
+  hipThrust: {
+    name: 'Hip thrust',
+    muscles: 'Glúteos · Isquios',
+    works: ['thighL', 'thighR'],
+    instructions: 'Acuéstate boca arriba, rodillas dobladas y pies firmes en el piso. Cruza la banda por encima de la cadera y sujeta cada extremo contra el suelo a los costados. Sube la cadera apretando glúteos hasta alinear hombros, cadera y rodillas; baja con control.',
+    keyframes: ['hipThrustDown', 'hipThrustUp', 'hipThrustDown'],
     duration: 3.0,
-    band: { type: 'footToHand_dual', naturalLength: 0.5 },
+    band: { type: 'handToHand_overHip', naturalLength: 0.55 },
   },
   woodchopperL: {
     name: 'Woodchopper diagonal (izq.)',

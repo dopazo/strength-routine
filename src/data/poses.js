@@ -67,17 +67,22 @@ export const POSES = {
     hipL: [d(-90), 0, 0], hipR: [d(-90), 0, 0],
     kneeL: [d(110), 0, 0], kneeR: [d(110), 0, 0],
   },
-  rdlUp: {
-    rootPos: [0, 1.0, 0], rootRot: [0, 0, 0], torsoRot: [0, 0, 0],
-    shoulderL: [d(0), 0, d(-10)], shoulderR: [d(0), 0, d(10)],
-    elbowL: [d(-10), 0, 0], elbowR: [d(-10), 0, 0],
-    hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(10), 0, 0], kneeR: [d(10), 0, 0],
-  },
-  rdlDown: {
-    rootPos: [0, 0.95, 0], rootRot: [0, 0, 0], torsoRot: [d(55), 0, 0],
-    shoulderL: [d(-55), 0, d(-8)], shoulderR: [d(-55), 0, d(8)],
+  // Hip thrust en suelo: rootRot[X] = -90° pone al muñeco supino. La cadera
+  // (root) sube en eje Y; las manos quedan a los costados sobre el suelo
+  // sujetando los extremos de la banda, que cruza por encima de la pelvis.
+  hipThrustDown: {
+    rootPos: [0, -0.30, 0], rootRot: [d(-90), 0, 0], torsoRot: [0, 0, 0],
+    shoulderL: [0, 0, 0], shoulderR: [0, 0, 0],
     elbowL: [d(-5), 0, 0], elbowR: [d(-5), 0, 0],
-    hipL: [0, 0, 0], hipR: [0, 0, 0], kneeL: [d(15), 0, 0], kneeR: [d(15), 0, 0],
+    hipL: [d(-45), 0, 0], hipR: [d(-45), 0, 0],
+    kneeL: [d(97), 0, 0], kneeR: [d(97), 0, 0],
+  },
+  hipThrustUp: {
+    rootPos: [0, -0.10, 0], rootRot: [d(-90), 0, 0], torsoRot: [d(-30), 0, 0],
+    shoulderL: [d(34), 0, 0], shoulderR: [d(34), 0, 0],
+    elbowL: [d(-5), 0, 0], elbowR: [d(-5), 0, 0],
+    hipL: [d(-17), 0, 0], hipR: [d(-17), 0, 0],
+    kneeL: [d(108), 0, 0], kneeR: [d(108), 0, 0],
   },
   rowStart: {
     rootPos: [0, 0.92, 0], rootRot: [0, 0, 0], torsoRot: [d(50), 0, 0],
