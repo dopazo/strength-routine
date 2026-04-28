@@ -2,70 +2,99 @@ import React from 'react';
 import { ROUTINE, TOTAL_DURATION } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
 export function StartScreen({ onStart }) {
-  const byPhase = ROUTINE.reduce((acc, r) => {
-    acc[r.phase] = acc[r.phase] || [];
-    acc[r.phase].push(r);
-    return acc;
-  }, {});
+  const groups = [];
+  const phaseIndex = new Map();
+  ROUTINE.forEach((r, i) => {
+    if (!phaseIndex.has(r.phase)) {
+      phaseIndex.set(r.phase, groups.length);
+      groups.push({ phase: r.phase, items: [] });
+    }
+    groups[phaseIndex.get(r.phase)].items.push({ ...r, dorsal: i + 1 });
+  });
 
   const totalSets = ROUTINE.reduce((s, r) => s + r.sets, 0);
   const minutes = Math.round(TOTAL_DURATION / 60);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center px-5 py-8">
+    <div className="min-h-screen bg-paper text-ink flex flex-col items-center px-5 py-7 font-sans">
       <div className="w-full max-w-md">
-        <div className="mb-1 text-xs font-mono tracking-[0.3em] text-lime-400 uppercase">Banda Elástica</div>
-        <h1 className="text-4xl font-light tracking-tight leading-none mb-1">Rutina de fuerza</h1>
-        <div className="text-neutral-500 text-sm">Plan completo · cuerpo entero</div>
+        <div className="flex items-baseline justify-between">
+          <span className="font-mono text-[10px] tracking-[0.32em] text-blaze uppercase">Banda Elástica</span>
+          <span className="font-mono text-[10px] tracking-[0.3em] text-ink-3 uppercase">Programa · 01</span>
+        </div>
+        <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-[0.95] mt-2">
+          Rutina<br/>de fuerza
+        </h1>
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3 mt-3">
+          Plan completo · cuerpo entero
+        </div>
 
-        <div className="grid grid-cols-3 gap-2 mt-6 mb-8">
-          <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
-            <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Duración</div>
-            <div className="text-2xl font-light mt-1 tabular-nums">{minutes}<span className="text-sm text-neutral-500 ml-1">min</span></div>
+        <div className="grid grid-cols-3 mt-5 mb-7 border border-line">
+          <div className="p-3 border-r border-line">
+            <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Duración</div>
+            <div className="flex items-baseline gap-1 mt-1.5 leading-none">
+              <span className="font-display font-bold text-3xl tabular-nums">{minutes}</span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">min</span>
+            </div>
           </div>
-          <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
-            <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Ejercicios</div>
-            <div className="text-2xl font-light mt-1 tabular-nums">{ROUTINE.length}</div>
+          <div className="p-3 border-r border-line">
+            <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Ejercicios</div>
+            <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">{ROUTINE.length}</div>
           </div>
-          <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
-            <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Series</div>
-            <div className="text-2xl font-light mt-1 tabular-nums">{totalSets}</div>
+          <div className="p-3">
+            <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Series</div>
+            <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">{totalSets}</div>
           </div>
         </div>
 
-        <div className="space-y-4 mb-8">
-          {Object.entries(byPhase).map(([phase, items]) => (
+        <div className="space-y-4 mb-7">
+          {groups.map(({ phase, items }) => (
             <div key={phase}>
-              <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500 mb-2">{phase}</div>
-              <div className="space-y-1.5">
-                {items.map((item, idx) => {
+              <div className="flex items-baseline justify-between pb-1.5 mb-1 border-b border-line">
+                <span className="font-display font-semibold text-[15px] uppercase tracking-[0.12em] text-ink">
+                  {phase}
+                </span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3 tabular-nums">
+                  {items.length} {items.length === 1 ? 'EJER' : 'EJER'}
+                </span>
+              </div>
+              <ul>
+                {items.map((item) => {
                   const ex = EXERCISES[item.exerciseId];
                   return (
-                    <div key={idx} className="flex items-center justify-between py-2 px-3 bg-neutral-900/50 rounded-md border border-neutral-800/60">
-                      <div>
-                        <div className="text-sm">{ex.name}</div>
-                        <div className="text-xs text-neutral-500">{ex.muscles}</div>
+                    <li key={item.dorsal} className="flex items-center gap-3 py-2 border-b border-line/50 last:border-b-0">
+                      <span className="font-display font-semibold text-[15px] text-ink-2 tabular-nums w-7 leading-none">
+                        {pad2(item.dorsal)}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] leading-tight truncate">{ex.name}</div>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mt-0.5 truncate">
+                          {ex.muscles}
+                        </div>
                       </div>
-                      <div className="text-xs font-mono text-neutral-400 tabular-nums">
-                        {item.sets}×{item.workSec}s
+                      <div className="font-mono text-[11px] text-ink-2 tabular-nums whitespace-nowrap">
+                        {item.sets}×{item.workSec}S
                       </div>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           ))}
         </div>
 
         <button
           onClick={onStart}
-          className="w-full bg-lime-400 hover:bg-lime-300 text-neutral-950 font-medium py-4 rounded-lg transition-colors text-base tracking-wide"
+          className="w-full bg-blaze hover:bg-[#f06028] text-ink py-4 font-display font-semibold uppercase tracking-[0.25em] text-[15px] flex items-center justify-center gap-3 transition-colors"
         >
-          Comenzar rutina
+          <span>Comenzar rutina</span>
+          <span className="font-mono text-xs translate-y-[-1px]">››</span>
         </button>
-        <p className="text-xs text-neutral-600 text-center mt-3">
-          Necesitas: una banda elástica plana · espacio para moverte
+        <p className="font-mono text-[9px] text-ink-3 text-center mt-3 uppercase tracking-[0.22em]">
+          Necesitas · banda elástica plana · espacio para moverte
         </p>
       </div>
     </div>

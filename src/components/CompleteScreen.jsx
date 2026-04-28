@@ -6,35 +6,52 @@ export function CompleteScreen({ totalElapsed, onRestart, onHome }) {
   const totalSets = ROUTINE.reduce((s, r) => s + r.sets, 0);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center px-5 py-8">
-      <div className="w-full max-w-md text-center">
-        <div className="text-xs font-mono tracking-[0.3em] text-lime-400 uppercase mb-3">Completada</div>
-        <h1 className="text-5xl font-light tracking-tight mb-8">Buen trabajo.</h1>
+    <div className="min-h-screen bg-paper text-ink flex flex-col items-center justify-center px-5 py-8 font-sans">
+      <div className="w-full max-w-md">
+        <div className="text-center">
+          <span className="inline-block px-2.5 py-1 border border-work text-work font-mono text-[10px] uppercase tracking-[0.4em] mb-6">
+            Completada
+          </span>
+          <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-none mb-7">
+            Buen trabajo
+          </h1>
+        </div>
 
-        <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-6">
-          <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-2">Tiempo total</div>
-          <div className="text-5xl font-mono font-light tabular-nums">{formatTime(totalElapsed)}</div>
-          <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-neutral-800">
-            <div>
-              <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Ejercicios</div>
-              <div className="text-2xl font-light mt-1 tabular-nums">{ROUTINE.length}</div>
+        <div className="border border-line mb-6">
+          <div className="px-4 pt-3 pb-4 border-b border-line">
+            <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Tiempo total</div>
+            <div
+              className="font-display font-bold tabular-nums leading-none mt-1.5 text-ink"
+              style={{ fontSize: '64px', letterSpacing: '-0.02em' }}
+            >
+              {formatTime(totalElapsed)}
             </div>
-            <div>
-              <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Series</div>
-              <div className="text-2xl font-light mt-1 tabular-nums">{totalSets}</div>
+          </div>
+          <div className="grid grid-cols-2">
+            <div className="p-3 border-r border-line">
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Ejercicios</div>
+              <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">
+                {ROUTINE.length}
+              </div>
+            </div>
+            <div className="p-3">
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Series</div>
+              <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">
+                {totalSets}
+              </div>
             </div>
           </div>
         </div>
 
         <button
           onClick={onRestart}
-          className="w-full bg-lime-400 hover:bg-lime-300 text-neutral-950 font-medium py-4 rounded-lg mb-2"
+          className="w-full bg-blaze hover:bg-[#f06028] text-ink py-4 font-display font-semibold uppercase tracking-[0.25em] text-[15px] mb-2 transition-colors"
         >
           Repetir rutina
         </button>
         <button
           onClick={onHome}
-          className="w-full bg-transparent border border-neutral-800 hover:bg-neutral-900 text-neutral-300 font-medium py-3 rounded-lg"
+          className="w-full border border-ink/40 hover:bg-paper-2 text-ink py-3 font-display font-semibold uppercase tracking-[0.22em] text-[13px] transition-colors"
         >
           Volver al inicio
         </button>

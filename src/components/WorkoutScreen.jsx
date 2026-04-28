@@ -4,15 +4,17 @@ import { ROUTINE, TOTAL_DURATION } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { ExerciseViewer } from './ExerciseViewer.jsx';
 
-const PHASE_COLORS = {
-  work:       { bg: 'bg-lime-500',  text: 'text-lime-400',  border: 'border-lime-500/30',  label: 'TRABAJO' },
-  rest:       { bg: 'bg-sky-500',   text: 'text-sky-400',   border: 'border-sky-500/30',   label: 'DESCANSO' },
-  transition: { bg: 'bg-amber-500', text: 'text-amber-400', border: 'border-amber-500/30', label: 'TRANSICIÓN' },
+const PHASE_STYLE = {
+  work:       { text: 'text-work',  border: 'border-work',  label: 'TRABAJO' },
+  rest:       { text: 'text-rest',  border: 'border-rest',  label: 'DESCANSO' },
+  transition: { text: 'text-trans', border: 'border-trans', label: 'TRANSICIÓN' },
 };
+
+const pad2 = (n) => String(n).padStart(2, '0');
 
 function PrevIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="15 18 9 12 15 6" />
     </svg>
   );
@@ -20,7 +22,7 @@ function PrevIcon() {
 
 function NextIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="9 6 15 12 9 18" />
     </svg>
   );
@@ -28,7 +30,7 @@ function NextIcon() {
 
 function PrevExerciseIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="17 18 11 12 17 6" />
       <polyline points="11 18 5 12 11 6" />
     </svg>
@@ -37,7 +39,7 @@ function PrevExerciseIcon() {
 
 function NextExerciseIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="7 6 13 12 7 18" />
       <polyline points="13 6 19 12 13 18" />
     </svg>
@@ -46,7 +48,7 @@ function NextExerciseIcon() {
 
 function PlayIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="5 3 19 12 5 21 5 3" />
     </svg>
   );
@@ -54,7 +56,7 @@ function PlayIcon() {
 
 function PauseIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="4" width="4" height="16" />
       <rect x="14" y="4" width="4" height="16" />
     </svg>
@@ -68,70 +70,97 @@ export function WorkoutScreen({ state, dispatch }) {
   const nextEx = next ? EXERCISES[next.exerciseId] : null;
   const prev = state.exerciseIdx > 0 ? ROUTINE[state.exerciseIdx - 1] : null;
   const prevEx = prev ? EXERCISES[prev.exerciseId] : null;
-  const phaseStyle = PHASE_COLORS[state.phase];
+  const phaseStyle = PHASE_STYLE[state.phase];
 
-  let phaseLabel;
-  if (state.phase === 'work') phaseLabel = `SERIE ${state.set} / ${current.sets}`;
-  else if (state.phase === 'rest') phaseLabel = `DESCANSO · próx. serie ${state.set + 1}/${current.sets}`;
-  else phaseLabel = `TRANSICIÓN · próx. ${nextEx.name}`;
+  let contextLine;
+  if (state.phase === 'work') {
+    contextLine = `SERIE ${pad2(state.set)}/${pad2(current.sets)} · ${current.workSec}S`;
+  } else if (state.phase === 'rest') {
+    contextLine = `PRÓX. SERIE ${pad2(state.set + 1)}/${pad2(current.sets)}`;
+  } else {
+    contextLine = `PRÓX. ${nextEx.name.toUpperCase()}`;
+  }
 
   const overallProgress = (state.totalElapsed / TOTAL_DURATION) * 100;
+  const dorsal = `${pad2(state.exerciseIdx + 1)}/${pad2(ROUTINE.length)}`;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
+    <div className="min-h-screen bg-paper text-ink flex flex-col font-sans">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1">
         <header className="px-5 pt-3 pb-2">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">{current.phase}</div>
-              <div className="text-xs text-neutral-400 mt-0.5 tabular-nums">Ejercicio {state.exerciseIdx + 1} / {ROUTINE.length}</div>
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">FASE</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink truncate">{current.phase}</span>
             </div>
-            <div className="text-right">
-              <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">Total</div>
-              <div className="text-xs font-mono text-neutral-300 mt-0.5 tabular-nums">
-                {formatTime(state.totalElapsed)} / {formatTime(TOTAL_DURATION)}
-              </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3 tabular-nums">
+                {formatTime(state.totalElapsed)}/{formatTime(TOTAL_DURATION)}
+              </span>
+              <span className="font-display font-semibold text-ink text-base leading-none tabular-nums">
+                {dorsal}
+              </span>
             </div>
           </div>
-          <div className="h-[2px] bg-neutral-900 rounded-full overflow-hidden">
+          <div className="relative h-[3px] bg-line">
             <div
-              className="h-full bg-lime-400 transition-all duration-100 ease-linear"
+              className="absolute inset-y-0 left-0 bg-blaze transition-all duration-100 ease-linear"
               style={{ width: `${overallProgress}%` }}
             />
+            {ROUTINE.slice(1).map((_, i) => {
+              const left = ((i + 1) / ROUTINE.length) * 100;
+              return (
+                <div
+                  key={i}
+                  className="absolute top-[-2px] bottom-[-2px] w-px bg-paper"
+                  style={{ left: `${left}%` }}
+                />
+              );
+            })}
           </div>
         </header>
 
         <div className="px-5 pb-2">
-          <div className="relative bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden" style={{ height: '230px' }}>
+          <div className="relative bg-scope border border-ink overflow-hidden" style={{ height: '230px' }}>
             <ExerciseViewer exerciseId={current.exerciseId} paused={state.isPaused} />
-            <div className="absolute top-3 left-3 text-[9px] font-mono text-neutral-500 tracking-wider">
-              ARRASTRA · ROTAR
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-ink/60" />
+              <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-ink/60" />
+              <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-ink/60" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-ink/60" />
+            </div>
+            <div className="absolute top-2 left-3 font-mono text-[9px] tracking-[0.25em] text-ink/40">
+              CAM·01 · ARRASTRA
             </div>
           </div>
         </div>
 
-        <div className="px-5 py-2">
-          <h2 className="text-xl font-light tracking-tight">{exercise.name}</h2>
-          <div className="text-xs text-neutral-500 mt-0.5">{exercise.muscles}</div>
-          <p className="text-sm text-neutral-400 mt-1.5 leading-snug">{exercise.instructions}</p>
+        <div className="px-5 py-1.5">
+          <h2 className="font-display font-semibold text-[22px] uppercase tracking-tight leading-none text-ink">
+            {exercise.name}
+          </h2>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3 mt-1.5">
+            {exercise.muscles}
+          </div>
+          <p className="text-[13px] text-ink-2 mt-1.5 leading-snug">{exercise.instructions}</p>
         </div>
 
-        <div className="flex flex-col items-center px-5 py-1">
-          <div className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-1 ${phaseStyle.text}`}>
-            {phaseStyle.label}
-          </div>
-          <div className="font-mono font-light tabular-nums text-[64px] leading-none">
-            {formatTime(state.timeRemaining)}
-          </div>
-          <div className="mt-1 flex items-center gap-2 leading-none">
-            <span className="text-[11px] text-neutral-500 font-mono uppercase tracking-widest">
-              {phaseLabel}
+        <div className="px-5 py-1">
+          <div className="flex flex-col items-center">
+            <span
+              className={`font-mono text-[10px] font-medium uppercase tracking-[0.4em] px-2 py-0.5 border ${phaseStyle.border} ${phaseStyle.text}`}
+            >
+              {phaseStyle.label}
             </span>
-            {state.phase === 'work' && (
-              <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 rounded-full text-[11px] font-mono text-neutral-300">
-                {current.workSec}s
-              </span>
-            )}
+            <div
+              className="font-display font-bold tabular-nums text-ink mt-1.5"
+              style={{ fontSize: '76px', lineHeight: '0.85', letterSpacing: '-0.02em' }}
+            >
+              {formatTime(state.timeRemaining)}
+            </div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-3 mt-1 tabular-nums">
+              {contextLine}
+            </div>
           </div>
         </div>
 
@@ -141,11 +170,16 @@ export function WorkoutScreen({ state, dispatch }) {
               {prevEx && (
                 <button
                   onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
-                  className="flex items-center gap-1.5 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors min-w-0"
+                  className="flex items-center gap-2 min-w-0 group"
                   aria-label={`Ir a ${prevEx.name}`}
                 >
                   <PrevExerciseIcon />
-                  <span className="truncate">{prevEx.name}</span>
+                  <span className="font-display font-semibold text-[13px] text-ink leading-none tabular-nums">
+                    {pad2(state.exerciseIdx)}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-3 truncate group-hover:text-ink">
+                    {prevEx.name}
+                  </span>
                 </button>
               )}
             </div>
@@ -153,48 +187,56 @@ export function WorkoutScreen({ state, dispatch }) {
               {nextEx && (
                 <button
                   onClick={() => dispatch({ type: 'NEXT_EXERCISE' })}
-                  className="flex items-center gap-1.5 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors min-w-0"
+                  className="flex items-center gap-2 min-w-0 group"
                   aria-label={`Ir a ${nextEx.name}`}
                 >
-                  <span className="truncate">{nextEx.name}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-3 truncate group-hover:text-ink">
+                    {nextEx.name}
+                  </span>
+                  <span className="font-display font-semibold text-[13px] text-ink leading-none tabular-nums">
+                    {pad2(state.exerciseIdx + 2)}
+                  </span>
                   <NextExerciseIcon />
                 </button>
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-stretch gap-2">
             <button
               onClick={() => dispatch({ type: 'PREV' })}
-              className="flex-1 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
+              className="flex-1 py-2.5 border border-ink/40 text-ink hover:bg-paper-2 transition-colors flex items-center justify-center"
               aria-label="Repetición anterior"
             >
               <PrevIcon />
             </button>
             <button
               onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })}
-              className={`flex-[2] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-[2] py-3 font-display font-semibold uppercase tracking-[0.22em] text-[15px] flex items-center justify-center gap-2 transition-colors ${
                 state.isPaused
-                  ? 'bg-lime-400 hover:bg-lime-300 text-neutral-950'
-                  : 'bg-neutral-100 hover:bg-white text-neutral-950'
+                  ? 'bg-blaze text-ink hover:bg-[#f06028]'
+                  : 'bg-ink text-paper hover:bg-[#d8d2c2]'
               }`}
             >
               {state.isPaused ? <><PlayIcon /> Reanudar</> : <><PauseIcon /> Pausar</>}
             </button>
             <button
               onClick={() => dispatch({ type: 'NEXT' })}
-              className="flex-1 py-2.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors flex items-center justify-center"
+              className="flex-1 py-2.5 border border-ink/40 text-ink hover:bg-paper-2 transition-colors flex items-center justify-center"
               aria-label="Repetición siguiente"
             >
               <NextIcon />
             </button>
           </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-900">
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-line">
             <button
               onClick={() => dispatch({ type: 'TO_HOME' })}
-              className="text-xs text-neutral-500 hover:text-neutral-300 font-mono uppercase tracking-wider"
+              className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-3 hover:text-ink"
             >
-              ← Inicio
+              ‹‹ INICIO
             </button>
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-3 tabular-nums">
+              REPS·{current.reps}
+            </span>
           </div>
         </div>
       </div>
