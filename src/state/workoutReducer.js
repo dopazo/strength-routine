@@ -112,9 +112,6 @@ export function workoutReducer(state, action) {
       return jumpTo(state, state.exerciseIdx + 1, 1, 'work');
     }
     case 'PREV_EXERCISE': {
-      if (!(state.set === 1 && state.phase === 'work')) {
-        return jumpTo(state, state.exerciseIdx, 1, 'work');
-      }
       if (state.exerciseIdx === 0) return state;
       return jumpTo(state, state.exerciseIdx - 1, 1, 'work');
     }

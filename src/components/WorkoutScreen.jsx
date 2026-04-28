@@ -66,6 +66,8 @@ export function WorkoutScreen({ state, dispatch }) {
   const exercise = EXERCISES[current.exerciseId];
   const next = state.exerciseIdx < ROUTINE.length - 1 ? ROUTINE[state.exerciseIdx + 1] : null;
   const nextEx = next ? EXERCISES[next.exerciseId] : null;
+  const prev = state.exerciseIdx > 0 ? ROUTINE[state.exerciseIdx - 1] : null;
+  const prevEx = prev ? EXERCISES[prev.exerciseId] : null;
   const phaseStyle = PHASE_COLORS[state.phase];
 
   let phaseLabel;
@@ -132,23 +134,31 @@ export function WorkoutScreen({ state, dispatch }) {
         </div>
 
         <div className="px-5 pb-5 pt-2">
-          <div className="flex items-center justify-center gap-8 mb-3">
-            <button
-              onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
-              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 hover:text-neutral-300 transition-colors"
-              aria-label="Ejercicio anterior"
-            >
-              <PrevExerciseIcon />
-              <span>Ejercicio</span>
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'NEXT_EXERCISE' })}
-              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 hover:text-neutral-300 transition-colors"
-              aria-label="Ejercicio siguiente"
-            >
-              <span>Ejercicio</span>
-              <NextExerciseIcon />
-            </button>
+          <div className="flex items-center justify-between gap-3 mb-3 px-1 min-h-[20px]">
+            <div className="flex-1 flex justify-start min-w-0">
+              {prevEx && (
+                <button
+                  onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
+                  className="flex items-center gap-1.5 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors min-w-0"
+                  aria-label={`Ir a ${prevEx.name}`}
+                >
+                  <PrevExerciseIcon />
+                  <span className="truncate">{prevEx.name}</span>
+                </button>
+              )}
+            </div>
+            <div className="flex-1 flex justify-end min-w-0">
+              {nextEx && (
+                <button
+                  onClick={() => dispatch({ type: 'NEXT_EXERCISE' })}
+                  className="flex items-center gap-1.5 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors min-w-0"
+                  aria-label={`Ir a ${nextEx.name}`}
+                >
+                  <span className="truncate">{nextEx.name}</span>
+                  <NextExerciseIcon />
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center justify-between gap-3">
             <button
@@ -183,12 +193,6 @@ export function WorkoutScreen({ state, dispatch }) {
             >
               ← Inicio
             </button>
-            {nextEx && (
-              <div className="text-right">
-                <div className="text-[9px] font-mono text-neutral-600 uppercase tracking-widest">Siguiente</div>
-                <div className="text-xs text-neutral-400 mt-0.5">{nextEx.name}</div>
-              </div>
-            )}
           </div>
         </div>
       </div>
