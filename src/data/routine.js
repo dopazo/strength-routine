@@ -8,7 +8,7 @@ export const ROUTINE = [
   { exerciseId: 'curl',      sets: 4, workSec: 40, restSec: 50, reps: '12',       phase: 'Tracción' },
   { exerciseId: 'squat',     sets: 4, workSec: 50, restSec: 75, reps: '10-12',    phase: 'Piernas' },
   { exerciseId: 'rdl',       sets: 4, workSec: 50, restSec: 75, reps: '10-12',    phase: 'Piernas' },
-  { exerciseId: 'pallof',    sets: 3, workSec: 40, restSec: 45, reps: '8 c/lado', phase: 'Core' },
+  { exerciseId: 'woodchopper', sets: 3, workSec: 40, restSec: 45, reps: '8 c/lado', phase: 'Core' },
   { exerciseId: 'lateral',   sets: 3, workSec: 35, restSec: 45, reps: '15',       phase: 'Finalización' },
 ];
 

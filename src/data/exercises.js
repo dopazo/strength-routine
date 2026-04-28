@@ -21,12 +21,12 @@ export const EXERCISES = {
     band: { type: 'footToHand_dual', naturalLength: 0.6 },
   },
   tricep: {
-    name: 'Extensión de tríceps',
+    name: 'Tríceps kickback',
     muscles: 'Tríceps',
-    instructions: 'Sostén la banda con ambas manos sobre la cabeza. Baja flexionando solo los codos, brazos pegados a la cabeza.',
-    keyframes: ['tricepUp', 'tricepDown', 'tricepUp'],
+    instructions: 'Pisa la banda. Inclínate adelante con rodillas algo flexionadas, codos pegados al cuerpo. Estira los codos llevando las manos atrás.',
+    keyframes: ['tricepKickbackStart', 'tricepKickbackEnd', 'tricepKickbackStart'],
     duration: 2.5,
-    band: { type: 'overhead_to_feet', naturalLength: 1.4 },
+    band: { type: 'footToHand_dual', naturalLength: 0.55 },
   },
   row: {
     name: 'Remo encorvado',
@@ -60,13 +60,13 @@ export const EXERCISES = {
     duration: 3.0,
     band: { type: 'footToHand_dual', naturalLength: 0.5 },
   },
-  pallof: {
-    name: 'Pallof press',
+  woodchopper: {
+    name: 'Woodchopper diagonal',
     muscles: 'Core · Oblicuos',
-    instructions: 'Banda anclada al lado a la altura del pecho. Sostén con ambas manos al centro y extiéndelas al frente.',
-    keyframes: ['pallofIn', 'pallofOut', 'pallofIn'],
+    instructions: 'Pisa un extremo de la banda con un pie. Toma el otro extremo con ambas manos a la altura de la cadera opuesta y súbelo en diagonal hasta el hombro contrario.',
+    keyframes: ['woodchopLow', 'woodchopHigh', 'woodchopLow'],
     duration: 3.0,
-    band: { type: 'anchored_side', anchorPos: [-2, 1.05, 0], naturalLength: 1.5 },
+    band: { type: 'footToHand_dual', naturalLength: 0.8 },
   },
   lateral: {
     name: 'Elevación lateral',
