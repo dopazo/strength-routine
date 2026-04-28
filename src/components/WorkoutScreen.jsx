@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatTime } from '../utils.js';
-import { ROUTINE, TOTAL_DURATION } from '../data/routine.js';
+import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { ExerciseViewer } from './ExerciseViewer.jsx';
 
@@ -107,16 +107,13 @@ export function WorkoutScreen({ state, dispatch }) {
               className="absolute inset-y-0 left-0 bg-blaze transition-all duration-100 ease-linear"
               style={{ width: `${overallProgress}%` }}
             />
-            {ROUTINE.slice(1).map((_, i) => {
-              const left = ((i + 1) / ROUTINE.length) * 100;
-              return (
-                <div
-                  key={i}
-                  className="absolute top-[-2px] bottom-[-2px] w-px bg-paper"
-                  style={{ left: `${left}%` }}
-                />
-              );
-            })}
+            {EXERCISE_BOUNDARIES.map((left, i) => (
+              <div
+                key={i}
+                className="absolute top-[-2px] bottom-[-2px] w-px bg-paper"
+                style={{ left: `${left}%` }}
+              />
+            ))}
           </div>
         </header>
 

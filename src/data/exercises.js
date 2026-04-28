@@ -63,7 +63,7 @@ export const EXERCISES = {
     name: 'Hip thrust',
     muscles: 'Glúteos · Isquios',
     works: ['thighL', 'thighR'],
-    instructions: 'Acuéstate boca arriba, rodillas dobladas y pies firmes en el piso. Cruza la banda por encima de la cadera y sujeta cada extremo contra el suelo a los costados. Sube la cadera apretando glúteos hasta alinear hombros, cadera y rodillas; baja con control.',
+    instructions: 'Boca arriba y rodillas dobladas. Cruza la banda sobre de la cadera y sujeta los extremos contra el suelo. Sube la cadera apretando glúteos hasta alinear hombros, cadera y rodillas; baja con control.',
     keyframes: ['hipThrustDown', 'hipThrustUp', 'hipThrustDown'],
     duration: 3.0,
     band: { type: 'handToHand_overHip', naturalLength: 0.55 },

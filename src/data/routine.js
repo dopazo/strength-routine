@@ -18,3 +18,14 @@ export const TOTAL_DURATION = ROUTINE.reduce((sum, r, i) => {
   if (i < ROUTINE.length - 1) t += TRANSITION_SEC;
   return sum + t;
 }, 0);
+
+export const EXERCISE_BOUNDARIES = (() => {
+  const out = [];
+  let acc = 0;
+  for (let i = 0; i < ROUTINE.length - 1; i++) {
+    const r = ROUTINE[i];
+    acc += r.sets * r.workSec + (r.sets - 1) * r.restSec + TRANSITION_SEC;
+    out.push((acc / TOTAL_DURATION) * 100);
+  }
+  return out;
+})();
