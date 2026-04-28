@@ -4,9 +4,11 @@ Strength-training routine app for **flat open resistance bands** (therapy bands 
 
 Every exercise is rendered in 3D with an animated skeleton, and the band is drawn with tension-reactive color (lime → red as it stretches).
 
-<img src="docs/start-screen.png" alt="Routine overview" width="600" />
-
-<img src="docs/workout-screen.png" alt="Workout view with 3D viewer" width="600" />
+<p>
+  <img src="docs/start-screen.png" alt="Routine overview" width="320" />
+  &nbsp;
+  <img src="docs/workout-screen.png" alt="Workout view with 3D viewer" width="320" />
+</p>
 
 ## Stack
 
