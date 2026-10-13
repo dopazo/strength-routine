@@ -1,165 +1,132 @@
 import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import { EXERCISES } from '../data/exercises.js';
-import { POSES } from '../data/poses.js';
-import { blendPose } from '../utils.js';
-import { applyPose, applyTint, buildSkeleton } from '../three/skeleton.js';
-import { createBandRenderer } from '../three/bandRenderer.js';
+import { createExerciseScene } from '../three/exerciseScene.js';
 
-export function ExerciseViewer({ exerciseId, paused }) {
-  const containerRef = useRef(null);
-  // stateRef expone los props mutables al loop de animación sin recrear la escena.
-  const stateRef = useRef({ exerciseId, paused, clock: 0 });
+const pad2 = (n) => String(n).padStart(2, '0');
 
-  useEffect(() => {
-    stateRef.current.exerciseId = exerciseId;
-    stateRef.current.clock = 0;
-  }, [exerciseId]);
+const CUE_COLOR = {
+  effort: 'var(--color-work)',
+  control: 'var(--color-ink-2)',
+  prep: 'var(--color-trans)',
+  rest: 'var(--color-rest)',
+};
 
-  useEffect(() => {
-    stateRef.current.paused = paused;
-  }, [paused]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let width = container.clientWidth;
-    let height = container.clientHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(2.8, 1.4, 4);
-    camera.lookAt(0, 0.95, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
-    keyLight.position.set(4, 8, 5);
-    scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x88aaff, 0.25);
-    fillLight.position.set(-5, 3, -2);
-    scene.add(fillLight);
-
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0.8 }),
-    );
-    floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
-    const grid = new THREE.GridHelper(8, 16, 0x333333, 0x222222);
-    grid.position.y = 0.001;
-    scene.add(grid);
-
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc4c4c4, roughness: 0.55, metalness: 0.1 });
-    const joints = buildSkeleton(scene, bodyMat);
-    const bands = createBandRenderer(scene);
-
-    // Colores reusados cada frame para el tinte muscular durante la tensión.
-    const baseColor = new THREE.Color(0xc4c4c4);
-    const tintColor = new THREE.Color(0xd06060);
-
-    // Órbita de cámara con drag (mouse/touch) + zoom con rueda.
-    let camAngle = 0.45, camHeight = 1.5, camDist = 4;
-    let dragging = false, lastX = 0, lastY = 0;
-    const onDown = (e) => {
-      dragging = true;
-      const t = e.touches ? e.touches[0] : e;
-      lastX = t.clientX; lastY = t.clientY;
-    };
-    const onUp = () => { dragging = false; };
-    const onMove = (e) => {
-      if (!dragging) return;
-      const t = e.touches ? e.touches[0] : e;
-      camAngle += (t.clientX - lastX) * 0.01;
-      camHeight = Math.max(0.3, Math.min(2.8, camHeight - (t.clientY - lastY) * 0.008));
-      lastX = t.clientX; lastY = t.clientY;
-    };
-    const onWheel = (e) => {
-      e.preventDefault();
-      camDist = Math.max(2.5, Math.min(7, camDist + e.deltaY * 0.005));
-    };
-    const canvas = renderer.domElement;
-    canvas.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('mousemove', onMove);
-    canvas.addEventListener('touchstart', onDown, { passive: true });
-    window.addEventListener('touchend', onUp);
-    window.addEventListener('touchmove', onMove, { passive: true });
-    canvas.addEventListener('wheel', onWheel, { passive: false });
-
-    const ro = new ResizeObserver(() => {
-      width = container.clientWidth;
-      height = container.clientHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    });
-    ro.observe(container);
-
-    let raf;
-    let lastTime = performance.now();
-
-    function animate() {
-      const now = performance.now();
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
-      if (!stateRef.current.paused) stateRef.current.clock += dt;
-
-      const exercise = EXERCISES[stateRef.current.exerciseId];
-      if (exercise) {
-        const t = (stateRef.current.clock % exercise.duration) / exercise.duration;
-        const segCount = exercise.keyframes.length - 1;
-        const segPos = t * segCount;
-        const segIdx = Math.min(Math.floor(segPos), segCount - 1);
-        const segT = segPos - segIdx;
-        const eased = segT * segT * (3 - 2 * segT); // smoothstep
-        const pose = blendPose(
-          POSES[exercise.keyframes[segIdx]],
-          POSES[exercise.keyframes[segIdx + 1]],
-          eased,
-        );
-        applyPose(joints, pose);
-        // Tensión 0→1→0 a lo largo del ciclo [A, B, A]: pico en pose B.
-        const tension = segIdx === 0 ? eased : 1 - eased;
-        applyTint(joints.meshes, exercise.works ?? [], tension, baseColor, tintColor);
-        scene.updateMatrixWorld(true);
-        bands.render(exercise, joints);
-      }
-
-      camera.position.set(
-        Math.sin(camAngle) * camDist,
-        camHeight,
-        Math.cos(camAngle) * camDist,
-      );
-      camera.lookAt(0, 0.95, 0);
-
-      renderer.render(scene, camera);
-      raf = requestAnimationFrame(animate);
+// Actualiza el HUD escribiendo directo en el DOM (cada frame, sin re-render
+// de React) y solo cuando cambia algún valor.
+function createHudWriter(refs) {
+  const last = {};
+  const set = (key, el, prop, value) => {
+    if (!el || last[key] === value) return;
+    last[key] = value;
+    if (prop === 'text') el.textContent = value;
+    else el.style[prop] = value;
+  };
+  return ({ hud }) => {
+    const r = refs.current;
+    const kind = hud?.kind ?? 'none';
+    const showTop = kind === 'rep' || kind === 'preview';
+    set('topVis', r.top, 'opacity', showTop ? '1' : '0');
+    if (kind === 'rep') {
+      set('label', r.label, 'text', 'REP');
+      set('value', r.value, 'text', `${pad2(hud.rep)}/${pad2(hud.total ?? 0)}`);
+    } else if (kind === 'preview') {
+      set('label', r.label, 'text', 'VISTA PREVIA');
+      set('value', r.value, 'text', hud.name ?? '');
     }
-    animate();
+    const cue = hud?.cue ?? '';
+    let tone = 'control';
+    if (cue === 'PREPÁRATE') tone = 'prep';
+    else if (cue === 'RESPIRA') tone = 'rest';
+    else if (hud?.effort && hud?.phase !== 'lead') tone = 'effort';
+    set('cue', r.cue, 'text', cue);
+    set('cueColor', r.cue, 'color', CUE_COLOR[tone]);
+    const showBar = kind === 'rep' || kind === 'preview' || kind === 'demo';
+    set('barVis', r.barWrap, 'opacity', showBar ? '1' : '0');
+    if (showBar) {
+      set('bar', r.bar, 'transform', `scaleX(${(hud.rom ?? 0).toFixed(3)})`);
+      set('barColor', r.bar, 'backgroundColor', tone === 'effort' ? CUE_COLOR.effort : 'var(--color-ink-2)');
+    }
+  };
+}
 
+// Visor 3D del ejercicio. La escena se construye una sola vez; los props se
+// pasan a la escena como "contexto" (fase del entrenamiento y segundos
+// transcurridos) y la escena decide la pose de cada frame.
+//
+// Props:
+//   exerciseId, nextExerciseId — ejercicio actual y siguiente (vista previa)
+//   phase        — 'work' | 'rest' | 'transition' (o 'demo'/'pose' en el lab)
+//   phaseKey     — identifica la fase actual (cambia al saltar de fase)
+//   phaseElapsed — segundos transcurridos en la fase
+//   phaseDuration, workSec, reps — duración de la fase y datos de la serie
+//   paused       — congela la repetición (el muñeco sigue respirando)
+//   fixedTime, pose, camera, freeRun — solo para el Pose Lab (freeRun: el
+//                reloj corre solo, sin temporizador externo)
+//   onScene      — recibe la instancia de escena (Pose Lab)
+export function ExerciseViewer({
+  exerciseId, nextExerciseId = null, phase = 'demo', phaseKey = 'demo', phaseElapsed = 0,
+  phaseDuration = 0, workSec = null, reps = null, paused = false, fixedTime = null, pose = null,
+  camera = null, freeRun = false, onScene, showHud = true,
+}) {
+  const hostRef = useRef(null);
+  const sceneRef = useRef(null);
+  const hudRefs = useRef({});
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return undefined;
+    const writeHud = createHudWriter(hudRefs);
+    const scene = createExerciseScene(host, { onFrame: writeHud });
+    sceneRef.current = scene;
+    onScene?.(scene);
     return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      canvas.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('mousemove', onMove);
-      canvas.removeEventListener('touchstart', onDown);
-      window.removeEventListener('touchend', onUp);
-      window.removeEventListener('touchmove', onMove);
-      canvas.removeEventListener('wheel', onWheel);
-      bands.dispose();
-      renderer.dispose();
-      bodyMat.dispose();
-      Object.values(joints.meshes).forEach((m) => m.material.dispose());
-      if (canvas.parentNode === container) container.removeChild(canvas);
+      scene.dispose();
+      sceneRef.current = null;
     };
+    // La escena se crea una sola vez; los props llegan por setContext.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  useEffect(() => {
+    sceneRef.current?.setContext({
+      exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera, freeRun,
+    });
+  }, [exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera, freeRun]);
+
+  useEffect(() => {
+    sceneRef.current?.setPaused(paused);
+  }, [paused]);
+
+  const ref = (k) => (el) => { hudRefs.current[k] = el; };
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={hostRef} className="absolute inset-0" />
+      {showHud && (
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            ref={ref('top')}
+            className="absolute top-2 right-3 flex flex-col items-end max-w-[62%] transition-opacity duration-300"
+            style={{ opacity: 0 }}
+          >
+            <span ref={ref('label')} className="font-mono text-[9px] tracking-[0.25em] text-ink/45 uppercase" />
+            <span
+              ref={ref('value')}
+              className="font-display font-semibold text-[17px] leading-none text-ink tabular-nums uppercase truncate max-w-full mt-0.5"
+            />
+          </div>
+          <span
+            ref={ref('cue')}
+            className="absolute left-3 bottom-[13px] font-mono text-[10px] font-medium tracking-[0.3em] uppercase"
+          />
+          <div
+            ref={ref('barWrap')}
+            className="absolute left-3 right-3 bottom-[7px] h-[3px] bg-ink/10 transition-opacity duration-300"
+            style={{ opacity: 0 }}
+          >
+            <div ref={ref('bar')} className="h-full w-full origin-left" style={{ transform: 'scaleX(0)' }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
