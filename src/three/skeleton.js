@@ -1,171 +1,225 @@
 import * as THREE from 'three';
 
-function makeBone(material, length, radius = 0.055) {
-  const geo = new THREE.CylinderGeometry(radius, radius, length, 12);
+// Proporciones del muñeco (unidades ≈ metros; mide ~1.92 de pie).
+// La pelvis (root = centro de las articulaciones de cadera) queda a 1.0 del
+// suelo con las piernas estiradas: muslo + pierna + altura de tobillo.
+export const DIM = {
+  hipX: 0.1,
+  thigh: 0.48,
+  shin: 0.45,
+  ankleH: 0.07,
+  spineY: 0.24,      // pelvis (lumbar) → articulación torácica
+  shoulderY: 0.33,   // torácica → línea de hombros (hombros a 1.57 de pie)
+  shoulderX: 0.2,
+  neckY: 0.35,       // torácica → base del cuello
+  upperArm: 0.34,
+  forearm: 0.3,
+  grip: 0.05,        // muñeca → centro del puño (donde se sujeta la banda)
+};
+
+// Articulaciones que una pose controla (rotaciones locales como cuaterniones).
+export const RIG_JOINTS = [
+  'root', 'lumbar', 'thoracic', 'neck',
+  'shoulderL', 'shoulderR', 'elbowL', 'elbowR',
+  'hipL', 'hipR', 'kneeL', 'kneeR',
+];
+
+const HALF_FRONT = [-Math.PI / 2, Math.PI];  // thetaStart/thetaLength del semicilindro +Z
+const HALF_BACK = [Math.PI / 2, Math.PI];    // semicilindro -Z
+
+// Segmento cónico que cuelga hacia -Y desde el origen del padre. Con theta se
+// obtiene medio cilindro (frente = +Z, que es hacia donde mira el muñeco).
+function limb(material, length, rTop, rBottom, theta = [0, Math.PI * 2]) {
+  const geo = new THREE.CylinderGeometry(rTop, rBottom, length, 18, 1, false, theta[0], theta[1]);
   geo.translate(0, -length / 2, 0);
   return new THREE.Mesh(geo, material);
 }
 
-// Mitad de cilindro para separar bíceps (frontal) de tríceps (trasera).
-// thetaStart=0, thetaLength=PI cubre el semicilindro hacia +Z (frente del personaje).
-function makeHalfBone(material, length, radius, thetaStart, thetaLength) {
-  const geo = new THREE.CylinderGeometry(radius, radius, length, 12, 1, false, thetaStart, thetaLength);
-  geo.translate(0, -length / 2, 0);
+function sphere(material, r) {
+  return new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), material);
+}
+
+function ellipsoid(material, rx, ry, rz) {
+  const geo = new THREE.SphereGeometry(1, 24, 16);
+  geo.scale(rx, ry, rz);
   return new THREE.Mesh(geo, material);
 }
 
-function makeJoint(material, radius = 0.075) {
-  return new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 14), material);
+// Medio elipsoide: frente (+Z) o espalda (-Z). Permite teñir pecho y espalda
+// (o pelvis y glúteos) de forma independiente.
+function halfEllipsoid(material, rx, ry, rz, front) {
+  const geo = new THREE.SphereGeometry(1, 24, 16, front ? 0 : Math.PI, Math.PI);
+  geo.scale(rx, ry, rz);
+  return new THREE.Mesh(geo, material);
 }
 
-function buildArm(parent, side, material) {
+function capsuleX(material, r, length) {
+  const geo = new THREE.CapsuleGeometry(r, length, 6, 14);
+  geo.rotateZ(Math.PI / 2);
+  return new THREE.Mesh(geo, material);
+}
+
+function node(parent, x = 0, y = 0, z = 0) {
+  const o = new THREE.Object3D();
+  o.position.set(x, y, z);
+  parent.add(o);
+  return o;
+}
+
+function group(parent, x = 0, y = 0, z = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  parent.add(g);
+  return g;
+}
+
+function buildArm(parent, side, mk) {
   const sx = side === 'L' ? -1 : 1;
-  const shoulder = new THREE.Group();
-  shoulder.position.set(sx * 0.28, 0.3, 0);
-  parent.add(shoulder);
-
-  // Cap del hombro (deltoides) — esfera pequeña en la articulación, teñible de
-  // forma independiente para resaltar trabajo de hombros.
-  const shoulderCap = new THREE.Mesh(
-    new THREE.SphereGeometry(0.085, 14, 14),
-    material.clone(),
-  );
-  shoulder.add(shoulderCap);
-
-  // Brazo superior dividido en dos semicilindros: biceps (+Z, frontal) y triceps (-Z, trasero).
-  const upperArm = new THREE.Group();
-  shoulder.add(upperArm);
-  const upperLen = 0.4;
-  const upperRad = 0.055;
-  const biceps = makeHalfBone(material.clone(), upperLen, upperRad, 0, Math.PI);
-  const triceps = makeHalfBone(material.clone(), upperLen, upperRad, Math.PI, Math.PI);
-  upperArm.add(biceps);
-  upperArm.add(triceps);
-
-  const elbow = new THREE.Group();
-  elbow.position.y = -upperLen;
-  upperArm.add(elbow);
-  const forearm = makeBone(material.clone(), 0.38);
-  elbow.add(forearm);
-  const hand = new THREE.Object3D();
-  hand.position.y = -0.38;
-  elbow.add(hand);
-  return { shoulder, elbow, hand, biceps, triceps, forearm, shoulderCap };
+  const shoulder = group(parent, sx * DIM.shoulderX, DIM.shoulderY, 0);
+  // Deltoides: esfera en la articulación, teñible para ejercicios de hombro.
+  const shoulderCap = mk.add(shoulder, sphere(mk.tint(), 0.064));
+  // Brazo dividido en bíceps (frente) y tríceps (atrás).
+  const biceps = mk.add(shoulder, limb(mk.tint(), DIM.upperArm, 0.052, 0.04, HALF_FRONT));
+  const triceps = mk.add(shoulder, limb(mk.tint(), DIM.upperArm, 0.052, 0.04, HALF_BACK));
+  const elbow = group(shoulder, 0, -DIM.upperArm, 0);
+  mk.add(elbow, sphere(mk.base, 0.041));
+  const forearm = mk.add(elbow, limb(mk.tint(), DIM.forearm, 0.042, 0.03));
+  const wrist = group(elbow, 0, -DIM.forearm, 0);
+  const fist = mk.add(wrist, ellipsoid(mk.base, 0.04, 0.05, 0.034));
+  if (fist) fist.position.y = -0.042;
+  const hand = node(wrist, 0, -DIM.grip, 0);
+  return { shoulder, elbow, hand, shoulderCap, biceps, triceps, forearm };
 }
 
-function buildLeg(parent, side, material) {
+function buildLeg(parent, side, mk) {
   const sx = side === 'L' ? -1 : 1;
-  const hip = new THREE.Group();
-  // Cadera ubicada respecto al root (mismo y que la base del torso, ancho de hombros / 2).
-  hip.position.set(sx * 0.15, -0.35, 0);
-  parent.add(hip);
-  const thigh = makeBone(material.clone(), 0.5, 0.07);
-  hip.add(thigh);
-  const knee = new THREE.Group();
-  knee.position.y = -0.5;
-  thigh.add(knee);
-  const shin = makeBone(material.clone(), 0.45, 0.06);
-  knee.add(shin);
-  const foot = new THREE.Object3D();
-  foot.position.y = -0.45;
-  knee.add(foot);
-  return { hip, knee, foot, thigh, shin };
+  const hip = group(parent, sx * DIM.hipX, 0, 0);
+  const quads = mk.add(hip, limb(mk.tint(), DIM.thigh, 0.078, 0.055, HALF_FRONT));
+  const hamstrings = mk.add(hip, limb(mk.tint(), DIM.thigh, 0.078, 0.055, HALF_BACK));
+  const knee = group(hip, 0, -DIM.thigh, 0);
+  mk.add(knee, sphere(mk.base, 0.054));
+  const shin = mk.add(knee, limb(mk.tint(), DIM.shin, 0.055, 0.037));
+  // El tobillo es una articulación propia: tras la IK se orienta para que el
+  // pie quede plano en el suelo aunque la pierna se incline.
+  const ankle = group(knee, 0, -DIM.shin, 0);
+  mk.add(ankle, sphere(mk.base, 0.037));
+  if (mk.enabled) {
+    const geo = new THREE.CapsuleGeometry(0.041, 0.14, 6, 14);
+    geo.rotateX(Math.PI / 2);
+    geo.scale(1.05, 0.8, 1);
+    geo.translate(0, -DIM.ankleH + 0.041 * 0.8, 0.055);
+    mk.add(ankle, new THREE.Mesh(geo, mk.base));
+  }
+  // Puntos de apoyo de la banda bajo la planta: centro y borde externo.
+  const foot = node(ankle, 0, -DIM.ankleH + 0.004, 0.05);
+  const soleOuter = node(ankle, sx * 0.052, -DIM.ankleH + 0.004, 0.05);
+  return { hip, knee, ankle, foot, soleOuter, quads, hamstrings, shin };
 }
 
-// Torso dividido en dos cajas (mitad delantera = pecho, mitad trasera = espalda alta).
-function buildTorso(parent, material) {
-  const torso = new THREE.Group();
-  parent.add(torso);
-  const chest = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.7, 0.125),
-    material.clone(),
-  );
-  chest.position.z = 0.0625;
-  torso.add(chest);
-  const upperBack = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.7, 0.125),
-    material.clone(),
-  );
-  upperBack.position.z = -0.0625;
-  torso.add(upperBack);
-  return { torso, chest, upperBack };
+// Torso en dos tramos: `lumbar` pivota en la cadera (bisagra de cadera real,
+// lleva pelvis y abdomen) y `thoracic` en la cintura (pecho, hombros, cuello).
+function buildTorso(root, mk) {
+  const lumbar = group(root);
+  const pelvis = mk.add(lumbar, halfEllipsoid(mk.base, 0.165, 0.12, 0.11, true));
+  const glutes = mk.add(lumbar, halfEllipsoid(mk.tint(), 0.165, 0.12, 0.118, false));
+  if (pelvis) { pelvis.position.y = 0.03; glutes.position.y = 0.03; }
+  const abs = mk.add(lumbar, limb(mk.tint(), 0.24, 0.135, 0.15, HALF_FRONT));
+  const lowerBack = mk.add(lumbar, limb(mk.tint(), 0.24, 0.135, 0.15, HALF_BACK));
+  if (abs) {
+    for (const m of [abs, lowerBack]) { m.position.y = 0.3; m.scale.z = 0.74; }
+  }
+
+  const thoracic = group(lumbar, 0, DIM.spineY, 0);
+  const chest = mk.add(thoracic, halfEllipsoid(mk.tint(), 0.2, 0.2, 0.125, true));
+  const upperBack = mk.add(thoracic, halfEllipsoid(mk.tint(), 0.2, 0.2, 0.13, false));
+  if (chest) { chest.position.y = 0.15; upperBack.position.y = 0.15; }
+  const girdle = mk.add(thoracic, capsuleX(mk.base, 0.056, 0.32));
+  if (girdle) girdle.position.set(0, DIM.shoulderY - 0.01, -0.005);
+
+  const neck = group(thoracic, 0, DIM.neckY, 0);
+  const neckMesh = mk.add(neck, limb(mk.base, 0.11, 0.043, 0.047));
+  if (neckMesh) neckMesh.position.y = 0.11;
+  const head = mk.add(neck, ellipsoid(mk.base, 0.098, 0.12, 0.108));
+  if (head) head.position.set(0, 0.2, 0.012);
+  return { lumbar, thoracic, neck, chest, upperBack, abs, lowerBack, glutes };
 }
 
-// Construye un esqueleto jerárquico bajo `scene` y devuelve los nodos
-// que cualquier pose puede manipular (los mismos keys que existen en POSES).
-// Devuelve también `meshes` con referencias a las partes teñibles.
-export function buildSkeleton(scene, material) {
-  const root = new THREE.Group();
-  scene.add(root);
+// Construye el esqueleto jerárquico bajo `parent` y devuelve los nodos que una
+// pose manipula (RIG_JOINTS), los puntos de contacto (manos, tobillos, plantas),
+// `meshes` con las partes teñibles y `capsules` (colisión de la banda).
+// Con `{ meshes: false }` crea solo la jerarquía (para cálculos de FK).
+export function buildSkeleton(parent, material, { meshes = true } = {}) {
+  const all = [];
+  const mk = {
+    enabled: meshes,
+    base: material,
+    tint: () => (meshes ? material.clone() : null),
+    add(p, mesh) {
+      if (!meshes) {
+        mesh.geometry.dispose();
+        return null;
+      }
+      mesh.castShadow = true;
+      p.add(mesh);
+      all.push(mesh);
+      return mesh;
+    },
+  };
 
-  const { torso, chest, upperBack } = buildTorso(root, material);
+  const root = group(parent);
+  const torso = buildTorso(root, mk);
+  const armL = buildArm(torso.thoracic, 'L', mk);
+  const armR = buildArm(torso.thoracic, 'R', mk);
+  // Las piernas cuelgan del root (no del torso): una bisagra de cadera
+  // (remo, kickback) inclina el torso sin arrastrar las piernas.
+  const legL = buildLeg(root, 'L', mk);
+  const legR = buildLeg(root, 'R', mk);
 
-  const head = makeJoint(material, 0.17);
-  head.position.y = 0.55;
-  torso.add(head);
-
-  const armL = buildArm(torso, 'L', material);
-  const armR = buildArm(torso, 'R', material);
-  // Las piernas cuelgan del root (no del torso). Si fueran hijas del torso,
-  // bisagras de cadera (RDL/remo/kickback) rotarían toda la figura.
-  const legL = buildLeg(root, 'L', material);
-  const legR = buildLeg(root, 'R', material);
+  const capsules = [
+    { node: torso.lumbar, a: new THREE.Vector3(-0.09, 0.03, 0), b: new THREE.Vector3(0.09, 0.03, 0), r: 0.11 },
+    { node: torso.lumbar, a: new THREE.Vector3(0, 0.1, 0), b: new THREE.Vector3(0, 0.28, 0), r: 0.115 },
+    { node: torso.thoracic, a: new THREE.Vector3(0, 0.04, 0), b: new THREE.Vector3(0, 0.26, 0), r: 0.14 },
+    ...[legL, legR].flatMap((leg) => [
+      { node: leg.hip, a: new THREE.Vector3(0, 0, 0), b: new THREE.Vector3(0, -DIM.thigh, 0), r: 0.07 },
+      { node: leg.knee, a: new THREE.Vector3(0, 0, 0), b: new THREE.Vector3(0, -DIM.shin, 0), r: 0.05 },
+    ]),
+  ];
 
   return {
-    root, torso,
+    root,
+    lumbar: torso.lumbar, thoracic: torso.thoracic, neck: torso.neck,
     shoulderL: armL.shoulder, shoulderR: armR.shoulder,
     elbowL: armL.elbow, elbowR: armR.elbow,
     hipL: legL.hip, hipR: legR.hip,
     kneeL: legL.knee, kneeR: legR.knee,
+    ankleL: legL.ankle, ankleR: legR.ankle,
     handL: armL.hand, handR: armR.hand,
     footL: legL.foot, footR: legR.foot,
-    meshes: {
-      chest, upperBack,
+    soleOuterL: legL.soleOuter, soleOuterR: legR.soleOuter,
+    capsules,
+    allMeshes: all,
+    meshes: meshes ? {
+      chest: torso.chest, upperBack: torso.upperBack,
+      abs: torso.abs, lowerBack: torso.lowerBack, glutes: torso.glutes,
       shoulderCapL: armL.shoulderCap, shoulderCapR: armR.shoulderCap,
       bicepsL: armL.biceps, bicepsR: armR.biceps,
       tricepsL: armL.triceps, tricepsR: armR.triceps,
       forearmL: armL.forearm, forearmR: armR.forearm,
-      thighL: legL.thigh, thighR: legR.thigh,
+      quadsL: legL.quads, quadsR: legR.quads,
+      hamstringsL: legL.hamstrings, hamstringsR: legR.hamstrings,
       shinL: legL.shin, shinR: legR.shin,
-    },
+    } : {},
   };
 }
 
-// Offset Y aplicado al root para que los pies queden al ras del suelo (y=0).
-// El esqueleto mide 1.30 desde el root hasta la planta del pie (0.35 cadera + 0.5 muslo + 0.45 pierna),
-// así que rootPos.y = 1.0 (parado) + 0.30 = 1.30 deja el pie en y=0.
-const ROOT_Y_OFFSET = 0.30;
+// Mezcla máxima del color de tinte sobre el color base en el pico de esfuerzo.
+const MAX_TINT = 0.7;
 
-export function applyPose(joints, pose) {
-  joints.root.position.set(pose.rootPos[0], pose.rootPos[1] + ROOT_Y_OFFSET, pose.rootPos[2]);
-  joints.root.rotation.set(...pose.rootRot);
-  joints.torso.rotation.set(...pose.torsoRot);
-  joints.shoulderL.rotation.set(...pose.shoulderL);
-  joints.shoulderR.rotation.set(...pose.shoulderR);
-  joints.elbowL.rotation.set(...pose.elbowL);
-  joints.elbowR.rotation.set(...pose.elbowR);
-  joints.hipL.rotation.set(...pose.hipL);
-  joints.hipR.rotation.set(...pose.hipR);
-  joints.kneeL.rotation.set(...pose.kneeL);
-  joints.kneeR.rotation.set(...pose.kneeR);
-}
-
-// Mezcla máxima del color de tinte (rojo) sobre el color base. 0.6 deja el
-// músculo claramente rojizo en el pico de tensión sin saturarse.
-const MAX_TINT = 0.6;
-
-// Tiñe los meshes listados en `worksKeys` interpolando entre `baseColor` y
-// `tintColor` según `tension` (0..1). Resetea el resto a `baseColor` para
-// que no queden partes teñidas al cambiar de ejercicio.
-export function applyTint(meshes, worksKeys, tension, baseColor, tintColor) {
-  const worked = new Set(worksKeys);
-  const factor = Math.max(0, Math.min(1, tension)) * MAX_TINT;
+// Tiñe cada mesh según su nivel de activación (0..1). `levels` es un objeto
+// { meshKey: nivel } ya suavizado por quien llama.
+export function applyTint(meshes, levels, baseColor, tintColor) {
   for (const [key, mesh] of Object.entries(meshes)) {
-    const c = mesh.material.color;
-    if (worked.has(key)) {
-      c.copy(baseColor).lerp(tintColor, factor);
-    } else {
-      c.copy(baseColor);
-    }
+    const f = Math.max(0, Math.min(1, levels[key] ?? 0)) * MAX_TINT;
+    mesh.material.color.copy(baseColor).lerp(tintColor, f);
   }
 }

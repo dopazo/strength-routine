@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatTime } from '../utils.js';
-import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES } from '../data/routine.js';
+import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES, TRANSITION_SEC } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { ExerciseViewer } from './ExerciseViewer.jsx';
 
@@ -71,6 +71,9 @@ export function WorkoutScreen({ state, dispatch }) {
   const prev = state.exerciseIdx > 0 ? ROUTINE[state.exerciseIdx - 1] : null;
   const prevEx = prev ? EXERCISES[prev.exerciseId] : null;
   const phaseStyle = PHASE_STYLE[state.phase];
+  const phaseDuration = state.phase === 'work'
+    ? current.workSec
+    : state.phase === 'rest' ? current.restSec : TRANSITION_SEC;
 
   let contextLine;
   if (state.phase === 'work') {
@@ -119,7 +122,17 @@ export function WorkoutScreen({ state, dispatch }) {
 
         <div className="px-5 pb-2">
           <div className="relative bg-scope border border-ink overflow-hidden" style={{ height: '230px' }}>
-            <ExerciseViewer exerciseId={current.exerciseId} paused={state.isPaused} />
+            <ExerciseViewer
+              exerciseId={current.exerciseId}
+              nextExerciseId={next?.exerciseId ?? null}
+              phase={state.phase}
+              phaseKey={`${state.exerciseIdx}-${state.set}-${state.phase}`}
+              phaseElapsed={Math.max(0, phaseDuration - state.timeRemaining)}
+              phaseDuration={phaseDuration}
+              workSec={current.workSec}
+              reps={current.reps}
+              paused={state.isPaused}
+            />
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-ink/60" />
               <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-ink/60" />

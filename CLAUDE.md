@@ -23,39 +23,52 @@ For Cloudflare Pages or root-domain hosting, remove the `base` line.
 
 ## Architecture
 
-Three layers stacked from data → engine → UI. Adding a new exercise touches all three but is mostly data work.
+Four layers stacked from data → animation → engine → UI. Adding a new exercise touches data mostly.
 
 ### Data (`src/data/`)
-- `poses.js` — each pose is a flat dict of joint angles (`shoulderL`, `elbowR`, `kneeL`, …) plus `rootPos`/`rootRot`/`torsoRot`. Angles in radians via the `d()` helper from `utils.js`. Pose key set is the contract with the skeleton.
-- `exercises.js` — each exercise references pose ids via `keyframes` (typically `[A, B, A]` for a rep cycle), declares a `duration` (seconds for one full cycle in the 3D viewer), and a `band` config.
-- `routine.js` — ordered list of `{exerciseId, sets, workSec, restSec, reps, phase}`. `TOTAL_DURATION` is computed at module load and used for the progress bar.
+- `poses.js` — each pose is a flat dict of Euler XYZ joint angles (`shoulderL`, `elbowR`, `hipL`, `kneeR`, …) plus `rootPos` (world position of the pelvis = hip-joint center; standing ≈ `[0, 1.0, 0]`), `rootRot`, `torsoRot`. Optional: `headRot` (otherwise the head compensates part of the torso lean) and `lumbarRot` + `thoracicRot` (explicit spine segments; otherwise `torsoRot` is split between hip hinge and upper spine). Angles in radians via `d()` from `utils.js`. Every pose should leave the ankles at y ≈ 0.07 (feet flat on the floor). The header comment documents the axis conventions (figure faces +Z, "L" side is x<0).
+- `exercises.js` — `keyframes` (pose ids, typically `[A, B, A]`), `concentric` (index of the effort segment, default 0), `tempo` (relative durations `[move, hold, move, hold…]`), `cues` (Spanish text per segment, shown in the viewer HUD), `works` (tintable mesh keys), `camera` (`{yaw, pitch, dist, target}`), `restPose`, `plantHands` / `handPath`, and a `band` config. The header comment documents every field.
+- `routine.js` — ordered list of `{exerciseId, sets, workSec, restSec, reps, phase}`. `TOTAL_DURATION` is computed at module load and used for the progress bar. `workSec` and `reps` also drive the animation tempo.
+
+### Animation (`src/animation/`) — pure logic, no Three.js
+- `easing.js` — CSS-style `cubicBezier()`; `EASE.concentric` (fast start, long deceleration), `EASE.eccentric` (controlled, near-constant speed), `EASE.transition`.
+- `tempo.js` — `buildRepPlan(exercise, {workSec, reps})` scales the tempo so `reps` (upper bound of a range like `'10-12'`) fill `workSec` after a 1 s lead-in; `sampleRep(plan, t)` returns the poses to blend, eased factor, ROM progress, rep index, activation and cue.
+- `director.js` — `createDirector()` returns `evaluate(ctx, t)`: maps the workout phase + seconds elapsed in it to what the viewer shows. `work` → rep cycle; `rest` → `restPose`, then the start pose for the last `PREP_SEC`; `transition` → next exercise's rest pose, a preview loop of the next exercise, then its start pose. `demo`/`pose` modes serve the Pose Lab.
 
 ### State machine (`src/state/workoutReducer.js`)
 `useReducer`-driven. Phases cycle `work → rest → work …` until the last set, then `transition → work` of the next exercise. Last `work` of the last exercise sets `isComplete`. `App.jsx` runs a 100ms `setInterval` dispatching `TICK` with `delta: 0.1`. Action types: `START`, `TICK`, `TOGGLE_PAUSE`, `NEXT` (skip remaining time of current phase), `PREV` (back to previous exercise's first set), `RESTART`, `TO_HOME`.
 
 ### 3D engine (`src/three/`)
-- `skeleton.js` — `buildSkeleton(scene, material)` returns the joint map; `applyPose(joints, pose)` writes rotations. The keys returned by `buildSkeleton` MUST match the keys in every pose dict. If you add a new joint, update both poses and the skeleton.
-- `bandRenderer.js` — `createBandRenderer(scene)` returns `{render, dispose}`. Owns its materials and the segment meshes; call `dispose()` from the viewer cleanup. Band color shifts lime → red as `dist / naturalLength` exceeds 1 (visual tension feedback). Sag is added when slack (`stretch < 1`).
+- `skeleton.js` — `buildSkeleton(parent, material, {meshes})` builds the mannequin. `root` is the pelvis; legs hang from it, the torso is `lumbar` (pivots at the hips) → `thoracic` → `neck`/arms. Returns the joints listed in `RIG_JOINTS`, ankles, contact points (`handL/R` grip, `footL/R` and `soleOuterL/R` under the soles), `meshes` (tintable: `chest`, `upperBack`, `abs`, `lowerBack`, `glutes`, `shoulderCapL/R`, `bicepsL/R`, `tricepsL/R`, `forearmL/R`, `quadsL/R`, `hamstringsL/R`, `shinL/R`) and `capsules` (band colliders). If you add a joint, update `RIG_JOINTS`, the skeleton, `poseToRig` and the poses.
+- `rig.js` — `poseToRig(pose)` converts a pose dict to quaternions once (memoized); `blendRig` interpolates with slerp; `applyRig` writes the skeleton; `rigContacts` computes hand/ankle world positions via a mesh-less scratch skeleton; `solveLeg`/`solveArm` are analytic two-bone IK (bend plane taken from the FK pose); `orientFoot` keeps feet flat.
+- `bandRenderer.js` — `createBandSystem(scene)` returns `{setExercise, update, dispose}`. Each free band segment is a Verlet rope (stretch-only distance constraints, bending stiffness, gravity, floor friction, collision with the body capsules) drawn as a flat double-sided ribbon whose buffers are allocated once. Color shifts lime → amber → red with stretch and the ribbon narrows as it stretches. Natural length is derived from the keyframes (`minStretch`) unless `naturalLength` is set. Switching exercise fades the old band out and the new one in.
 - Band config types (in `exercise.band.type`):
   - `handToHand` — single segment between hands
-  - `footToHand_dual` — two segments, one per side (foot→hand)
+  - `footToHand_dual` — middle stepped on: strip under both feet + one segment per side (foot→hand)
   - `overhead_to_feet` — single segment, mid-hands → mid-feet
+  - `oneFoot_to_handMid` — one foot (`foot: 'L'|'R'`) → mid-hands
+  - `handToHand_overHip` — arc over the pelvis + one segment to each hand
   - `anchored_side` — fixed anchor mesh + segment to mid-hands; requires `anchorPos: [x,y,z]`
+- `cameraRig.js` — hand-rolled orbit camera (no `OrbitControls`): damped glide to each exercise's `camera` view, pointer drag to orbit, wheel/pinch to zoom; the user's offset resets when the exercise changes.
+- `exerciseScene.js` — `createExerciseScene(container, {onFrame})` returns `{setContext, setPaused, dispose}`. Owns renderer, lights, shadows and floor. Per frame: a smooth clock synced to the reducer's elapsed time → director → target pose; an automatic crossfade on any discontinuity (phase or exercise change, user skips), routed through `crouchLow`/`sitFloor` when going between standing and floor postures; secondary motion (breathing, weight shift, head); feet always IK-planted at the anchor pose (hands too with `plantHands`, or along a straight path with `handPath`); band physics; muscle tint from activation; camera.
 
 ### Viewer (`src/components/ExerciseViewer.jsx`)
-Builds the scene **once** in a `useEffect([])`. Props (`exerciseId`, `paused`) are piped through a `stateRef` so the animation loop reads current values without recreating the scene. Loop interpolates between consecutive keyframes with a smoothstep, calls `applyPose`, then `bands.render(exercise, joints)`. Camera orbit is mouse/touch drag + wheel zoom — recoded inline rather than using `OrbitControls` to keep the Three.js import minimal.
+Creates the scene **once** in a `useEffect([])`; props (`exerciseId`, `nextExerciseId`, `phase`, `phaseKey`, `phaseElapsed`, `phaseDuration`, `workSec`, `reps`, `paused`) are forwarded with `setContext`/`setPaused`, so the scene is never rebuilt. The HUD (rep counter, cue, ROM bar, preview label) is written straight to the DOM from the frame callback, without React re-renders.
 
 ### Screens (`src/components/`)
 `StartScreen`, `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete`. `WorkoutScreen` is the only consumer of `ExerciseViewer`.
 In mobile, entire screen with no scroll.
 
+### Pose Lab (`src/dev/PoseLab.jsx`)
+Dev-only tool: `bun run dev` → `http://localhost:5173/strength-routine/?lab`. Plays any exercise (looped, frozen at a time, or in work/rest/transition mode), edits a pose with sliders and copies it in `poses.js` format. URL params (`ex`, `mode`, `t`, `pose`, `yaw`, `pitch`, `dist`, `ty`, `capture=1`) make it scriptable for screenshots. `main.jsx` only loads it when `import.meta.env.DEV`, so it is stripped from production builds.
+
 ## Adding an exercise
 
-1. Add the start/end poses to `poses.js` (use `d()` for degrees → radians; keep the joint key set).
-2. Add the entry to `EXERCISES` with `keyframes` (usually `[start, end, start]`), `duration`, and a `band` config matching one of the four types above.
+1. Add the start/end poses to `poses.js` (use `d()` for degrees → radians; keep the joint key set; ankles at y ≈ 0.07). Tune them in the Pose Lab and paste the copied output.
+2. Add the entry to `EXERCISES` with `keyframes` (usually `[start, end, start]`), a `band` config matching one of the types above, and optionally `concentric`, `tempo`, `cues`, `works`, `camera`, `restPose`, `plantHands`/`handPath`.
 3. Add a row to `ROUTINE` with sets/work/rest/reps and a `phase` label (free-form Spanish string used for grouping on the start screen).
 
-If a movement needs a pose shape no existing exercise uses, prefer reusing/extending existing poses over duplicating; many poses are shared across exercises (e.g. `rdlDown` and `rowStart`).
+If a movement needs a pose shape no existing exercise uses, prefer reusing/extending existing poses over duplicating; many poses are shared across exercises (e.g. `standing` is the default rest pose).
 
 ## Language
 
