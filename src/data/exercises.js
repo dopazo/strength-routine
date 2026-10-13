@@ -44,7 +44,7 @@ export const EXERCISES = {
     keyframes: ['pressDown', 'pressUp', 'pressDown'],
     cues: ['EMPUJA', 'BAJA LENTO'],
     band: { type: 'footToHand_dual', minStretch: 1.08 },
-    camera: { yaw: 0.42, pitch: 0.08, dist: 3.95, target: [0, 1.17, 0] },
+    camera: { yaw: 0.42, pitch: 0.06, dist: 4.3, target: [0, 1.22, 0] },
   },
   tricep: {
     name: 'Tríceps kickback',

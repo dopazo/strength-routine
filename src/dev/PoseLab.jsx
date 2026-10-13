@@ -108,6 +108,7 @@ export function PoseLab() {
       workSec={routine.workSec}
       reps={routine.reps}
       fixedTime={fixed}
+      freeRun={fixed == null}
       pose={mode === 'pose' ? editedPose : null}
       camera={camera}
     />

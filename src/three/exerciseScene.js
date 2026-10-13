@@ -28,21 +28,29 @@ const TAU = Math.PI * 2;
 const X_AXIS = new THREE.Vector3(1, 0, 0);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
 
-function makeFloorGlow() {
+function makeRadialTexture(rgb, stops) {
   const size = 256;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const g = canvas.getContext('2d');
   const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, 'rgba(255,236,205,0.55)');
-  grad.addColorStop(0.45, 'rgba(255,236,205,0.18)');
-  grad.addColorStop(1, 'rgba(255,236,205,0)');
+  for (const [at, alpha] of stops) grad.addColorStop(at, `rgba(${rgb},${alpha})`);
   g.fillStyle = grad;
   g.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+
+// Calidad adaptativa: si el visor no sostiene ~45 fps, baja la resolución y
+// luego reemplaza las sombras en tiempo real por una sombra de contacto.
+const QUALITY = [
+  { dpr: 2, shadows: true, mapSize: 1024 },
+  { dpr: 1.5, shadows: true, mapSize: 512 },
+  { dpr: 1.25, shadows: false },
+];
+const MIN_FPS = 45;
+const FPS_WINDOW = 2.5;
 
 function rigJump(a, b, limit) {
   if (a.rootPos.distanceToSquared(b.rootPos) > 0.01) return true;
@@ -61,7 +69,7 @@ export function createExerciseScene(container, { onFrame } = {}) {
   let height = container.clientHeight || 1;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY[0].dpr));
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -101,7 +109,7 @@ export function createExerciseScene(container, { onFrame } = {}) {
   const grid = new THREE.GridHelper(18, 36, 0x302b22, 0x24211a);
   grid.position.y = 0.001;
   scene.add(grid);
-  const glowTex = makeFloorGlow();
+  const glowTex = makeRadialTexture('255,236,205', [[0, 0.55], [0.45, 0.18], [1, 0]]);
   const glowMat = new THREE.MeshBasicMaterial({
     map: glowTex, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending,
   });
@@ -110,11 +118,52 @@ export function createExerciseScene(container, { onFrame } = {}) {
   glow.position.y = 0.0015;
   scene.add(glow);
   const shadowMat = new THREE.ShadowMaterial({ opacity: 0.42 });
-  const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), shadowMat);
+  const shadowCatcher = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), shadowMat);
   shadowCatcher.rotation.x = -Math.PI / 2;
-  shadowCatcher.position.y = 0.002;
+  shadowCatcher.position.set(-0.4, 0.002, -0.5);
   shadowCatcher.receiveShadow = true;
   scene.add(shadowCatcher);
+  // Sombra de contacto barata (solo en calidad baja, sin sombras reales).
+  const blobTex = makeRadialTexture('0,0,0', [[0, 0.6], [0.5, 0.3], [1, 0]]);
+  const blobMat = new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false });
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), blobMat);
+  blob.rotation.x = -Math.PI / 2;
+  blob.position.y = 0.0025;
+  blob.visible = false;
+  scene.add(blob);
+
+  let quality = 0;
+  let perfFrames = 0;
+  let perfTime = -2; // ignora los primeros segundos (compilación de shaders)
+  function applyQuality(level) {
+    quality = level;
+    const q = QUALITY[level];
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.dpr));
+    renderer.setSize(width, height);
+    key.castShadow = q.shadows;
+    shadowCatcher.visible = q.shadows;
+    blob.visible = !q.shadows;
+    if (q.shadows && key.shadow.mapSize.x !== q.mapSize) {
+      key.shadow.mapSize.set(q.mapSize, q.mapSize);
+      key.shadow.map?.dispose();
+      key.shadow.map = null;
+    }
+  }
+  function monitorPerformance(rawDt) {
+    if (document.hidden || rawDt > 0.5 || quality >= QUALITY.length - 1) {
+      perfFrames = 0;
+      perfTime = Math.min(perfTime, 0);
+      return;
+    }
+    perfTime += rawDt;
+    if (perfTime <= 0) return;
+    perfFrames++;
+    if (perfTime >= FPS_WINDOW) {
+      if (perfFrames / perfTime < MIN_FPS) applyQuality(quality + 1);
+      perfFrames = 0;
+      perfTime = 0;
+    }
+  }
 
   // --- Muñeco, bandas y cámara.
   const bodyMat = new THREE.MeshStandardMaterial({ color: BODY_COLOR, roughness: 0.58, metalness: 0.02 });
@@ -172,6 +221,11 @@ export function createExerciseScene(container, { onFrame } = {}) {
   function advanceClock(dt, now) {
     if (ctx.fixedTime != null) {
       clock = ctx.fixedTime;
+      return;
+    }
+    if (ctx.freeRun) {
+      // Sin temporizador externo (Pose Lab): el reloj corre solo.
+      if (!paused) clock += dt;
       return;
     }
     if (!paused) clock += dt;
@@ -369,6 +423,14 @@ export function createExerciseScene(container, { onFrame } = {}) {
     }
     applyTint(joints.meshes, tintLevels, baseColor, tintColor);
 
+    if (blob.visible) {
+      // La sombra de contacto sigue a la pelvis y se alarga si está tendido.
+      const lying = rigPosture(workRig) === 'floor';
+      blob.position.x = joints.root.position.x;
+      blob.position.z = joints.root.position.z - (lying ? 0.35 : 0);
+      blob.scale.set(lying ? 0.9 : 0.85, lying ? 2.1 : 0.85, 1);
+    }
+
     // 5. Cámara y render.
     cameraRig.update(dt, now / 1000);
     renderer.render(scene, camera);
@@ -378,8 +440,10 @@ export function createExerciseScene(container, { onFrame } = {}) {
   let raf = 0;
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    const rawDt = Math.max(0, (now - last) / 1000);
+    const dt = Math.min(0.05, rawDt);
     last = now;
+    monitorPerformance(rawDt);
     frame(dt, now);
     raf = requestAnimationFrame(loop);
   }
@@ -403,8 +467,10 @@ export function createExerciseScene(container, { onFrame } = {}) {
       if (o.geometry) o.geometry.dispose();
     });
     for (const m of joints.allMeshes) if (m.material !== bodyMat) m.material.dispose();
-    [bodyMat, floorMat, glowMat, shadowMat, grid.material].forEach((m) => m.dispose());
+    [bodyMat, floorMat, glowMat, shadowMat, blobMat, grid.material].forEach((m) => m.dispose());
     glowTex.dispose();
+    blobTex.dispose();
+    key.shadow.map?.dispose();
     renderer.dispose();
     if (canvas.parentNode === container) container.removeChild(canvas);
   }

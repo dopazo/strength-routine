@@ -59,12 +59,13 @@ function createHudWriter(refs) {
 //   phaseElapsed — segundos transcurridos en la fase
 //   phaseDuration, workSec, reps — duración de la fase y datos de la serie
 //   paused       — congela la repetición (el muñeco sigue respirando)
-//   fixedTime, pose, camera — solo para el Pose Lab
+//   fixedTime, pose, camera, freeRun — solo para el Pose Lab (freeRun: el
+//                reloj corre solo, sin temporizador externo)
 //   onScene      — recibe la instancia de escena (Pose Lab)
 export function ExerciseViewer({
   exerciseId, nextExerciseId = null, phase = 'demo', phaseKey = 'demo', phaseElapsed = 0,
   phaseDuration = 0, workSec = null, reps = null, paused = false, fixedTime = null, pose = null,
-  camera = null, onScene, showHud = true,
+  camera = null, freeRun = false, onScene, showHud = true,
 }) {
   const hostRef = useRef(null);
   const sceneRef = useRef(null);
@@ -87,9 +88,9 @@ export function ExerciseViewer({
 
   useEffect(() => {
     sceneRef.current?.setContext({
-      exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera,
+      exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera, freeRun,
     });
-  }, [exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera]);
+  }, [exerciseId, nextExerciseId, phase, phaseKey, phaseElapsed, phaseDuration, workSec, reps, fixedTime, pose, camera, freeRun]);
 
   useEffect(() => {
     sceneRef.current?.setPaused(paused);
