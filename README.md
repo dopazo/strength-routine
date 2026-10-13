@@ -50,7 +50,8 @@ src/
 │   ├── StartScreen.jsx
 │   ├── WorkoutScreen.jsx
 │   ├── CompleteScreen.jsx
-│   └── ExerciseViewer.jsx  # React wrapper of the 3D scene + rep HUD
+│   ├── ExerciseViewer.jsx  # React wrapper of the 3D scene + rep HUD
+│   └── viewerLoader.js  # lazy-loads the viewer (Three.js) in a separate chunk
 ├── dev/
 │   └── PoseLab.jsx      # dev-only pose editor (`bun run dev` → `?lab`)
 ├── App.jsx              # routing via reducer flags + 100ms tick

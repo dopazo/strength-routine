@@ -217,7 +217,8 @@ export function orientFoot(joints, side) {
   const hip = joints[`hip${side}`];
   const knee = joints[`knee${side}`];
   const ankle = joints[`ankle${side}`];
-  hip.getWorldQuaternion(_qHip);
+  // Las matrices ya están al día tras la IK (y los huesos no tienen escala).
+  _qHip.setFromRotationMatrix(hip.matrixWorld);
   _side.copy(X_AXIS).applyQuaternion(_qHip);
   _side.y = 0;
   if (_side.lengthSq() < 1e-4) _side.copy(X_AXIS);
@@ -226,7 +227,7 @@ export function orientFoot(joints, side) {
   _m1.makeBasis(_side, Y_AXIS, _fwd);
   _qFoot.setFromRotationMatrix(_m1);
   _qFoot.multiply(_qKnee.setFromAxisAngle(Y_AXIS, side === 'L' ? -TOE_OUT : TOE_OUT));
-  knee.getWorldQuaternion(_qKnee);
+  _qKnee.setFromRotationMatrix(knee.matrixWorld);
   ankle.quaternion.copy(_qKnee.invert().multiply(_qFoot));
   ankle.updateMatrixWorld(true);
 }

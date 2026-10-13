@@ -42,6 +42,11 @@ function tensionColor(stretch, out) {
   return out.copy(COLOR_MID).lerp(COLOR_TAUT, (f - 0.5) * 2);
 }
 
+// Posición mundial leída de matrixWorld. La escena actualiza las matrices del
+// esqueleto antes de llamar a la banda (getWorldPosition las recalcularía,
+// subiendo por toda la cadena de padres en cada llamada).
+const wp = (obj, out) => out.setFromMatrixPosition(obj.matrixWorld);
+
 // ---------------------------------------------------------------------------
 // Disposición: dónde se fija cada tramo según `exercise.band.type`.
 // Escribe en vectores preasignados para no crear objetos por frame.
@@ -65,8 +70,8 @@ function createLayout(cfg) {
   };
   const tmp = v();
   const mid = (o1, o2, out) => {
-    o1.getWorldPosition(out);
-    o2.getWorldPosition(tmp);
+    wp(o1, out);
+    wp(o2, tmp);
     return out.add(tmp).multiplyScalar(0.5);
   };
 
@@ -75,8 +80,8 @@ function createLayout(cfg) {
     case 'handToHand': {
       const r = rope('hand', 'hand');
       update = (j) => {
-        j.handL.getWorldPosition(r.a);
-        j.handR.getWorldPosition(r.b);
+        wp(j.handL, r.a);
+        wp(j.handR, r.b);
       };
       break;
     }
@@ -87,10 +92,10 @@ function createLayout(cfg) {
       const rr = rope('foot', 'hand');
       const floor = strip(2, true);
       update = (j) => {
-        j.soleOuterL.getWorldPosition(rl.a);
-        j.handL.getWorldPosition(rl.b);
-        j.soleOuterR.getWorldPosition(rr.a);
-        j.handR.getWorldPosition(rr.b);
+        wp(j.soleOuterL, rl.a);
+        wp(j.handL, rl.b);
+        wp(j.soleOuterR, rr.a);
+        wp(j.handR, rr.b);
         floor.points[0].copy(rl.a);
         floor.points[1].copy(rr.a);
       };
@@ -102,8 +107,8 @@ function createLayout(cfg) {
       update = (j) => {
         mid(j.footL, j.footR, r.a);
         mid(j.handL, j.handR, r.b);
-        j.soleOuterL.getWorldPosition(floor.points[0]);
-        j.soleOuterR.getWorldPosition(floor.points[1]);
+        wp(j.soleOuterL, floor.points[0]);
+        wp(j.soleOuterR, floor.points[1]);
       };
       break;
     }
@@ -111,7 +116,7 @@ function createLayout(cfg) {
       const r = rope('foot', 'hand');
       const foot = cfg.foot === 'R' ? 'footR' : 'footL';
       update = (j) => {
-        j[foot].getWorldPosition(r.a);
+        wp(j[foot], r.a);
         mid(j.handL, j.handR, r.b);
       };
       break;
@@ -127,12 +132,11 @@ function createLayout(cfg) {
         return new THREE.Vector3(0.172 * Math.sin(a), 0.02, 0.122 * Math.cos(a));
       });
       update = (j) => {
-        j.lumbar.updateWorldMatrix(true, false);
         local.forEach((p, i) => arc.points[i].copy(p).applyMatrix4(j.lumbar.matrixWorld));
-        j.handL.getWorldPosition(rl.a);
+        wp(j.handL, rl.a);
         rl.b.copy(arc.points[0]);
         rr.a.copy(arc.points[ARC_POINTS - 1]);
-        j.handR.getWorldPosition(rr.b);
+        wp(j.handR, rr.b);
       };
       break;
     }
@@ -206,6 +210,7 @@ class Rope {
       p[ix + 1] += g;
     }
     this.pin(a, b);
+    const near = this.nearColliders(colliders);
 
     for (let it = 0; it < ITERATIONS; it++) {
       const forward = (it & 1) === 0;
@@ -225,7 +230,7 @@ class Rope {
         p[jx] -= dx * diff * wj; p[jx + 1] -= dy * diff * wj; p[jx + 2] -= dz * diff * wj;
       }
       this.stiffen();
-      this.collide(colliders);
+      if ((it & 1) === 1 || it === ITERATIONS - 1) this.collide(near);
     }
 
     // Roce con el suelo: lo que toca el piso pierde casi toda su velocidad
@@ -259,6 +264,31 @@ class Rope {
       p[ix] += dx * diff * wi; p[ix + 1] += dy * diff * wi; p[ix + 2] += dz * diff * wi;
       p[kx] -= dx * diff * wk; p[kx + 1] -= dy * diff * wk; p[kx + 2] -= dz * diff * wk;
     }
+  }
+
+  // Cápsulas cuya caja envolvente toca la de la cuerda (las demás no pueden
+  // chocar en este paso).
+  nearColliders(colliders) {
+    const { p, n } = this;
+    let x0 = Infinity; let y0 = Infinity; let z0 = Infinity;
+    let x1 = -Infinity; let y1 = -Infinity; let z1 = -Infinity;
+    for (let i = 0; i <= n; i++) {
+      const ix = i * 3;
+      x0 = Math.min(x0, p[ix]); x1 = Math.max(x1, p[ix]);
+      y0 = Math.min(y0, p[ix + 1]); y1 = Math.max(y1, p[ix + 1]);
+      z0 = Math.min(z0, p[ix + 2]); z1 = Math.max(z1, p[ix + 2]);
+    }
+    const m = 0.1;
+    const near = this._near || (this._near = []);
+    near.length = 0;
+    for (const c of colliders) {
+      const r = c.r + m;
+      if (Math.min(c.ax, c.bx) - r > x1 || Math.max(c.ax, c.bx) + r < x0) continue;
+      if (Math.min(c.ay, c.by) - r > y1 || Math.max(c.ay, c.by) + r < y0) continue;
+      if (Math.min(c.az, c.bz) - r > z1 || Math.max(c.az, c.bz) + r < z0) continue;
+      near.push(c);
+    }
+    return near;
   }
 
   collide(colliders) {
@@ -607,7 +637,6 @@ export function createBandSystem(scene) {
 
   function syncColliders(joints) {
     joints.capsules.forEach((cap, i) => {
-      cap.node.updateWorldMatrix(true, false);
       _a.copy(cap.a).applyMatrix4(cap.node.matrixWorld);
       _b.copy(cap.b).applyMatrix4(cap.node.matrixWorld);
       const c = colliders[i] || (colliders[i] = {});

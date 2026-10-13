@@ -3,7 +3,7 @@ import { EXERCISES } from '../data/exercises.js';
 import { POSES } from '../data/poses.js';
 import { createDirector } from '../animation/director.js';
 import { EASE } from '../animation/easing.js';
-import { buildSkeleton, applyTint } from './skeleton.js';
+import { applyTint, buildSkeleton, createBodyMaterial, MUSCLES } from './skeleton.js';
 import {
   applyRig, blendRig, copyRig, createRigPose, getScratchSkeleton, liveContacts,
   orientFoot, poseToRig, rigContacts, rigPosture, solveArm, solveLeg,
@@ -73,6 +73,8 @@ export function createExerciseScene(container, { onFrame } = {}) {
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
+  let shadowTick = 0;
   const canvas = renderer.domElement;
   canvas.style.display = 'block';
   canvas.style.touchAction = 'none';
@@ -166,10 +168,8 @@ export function createExerciseScene(container, { onFrame } = {}) {
   }
 
   // --- Muñeco, bandas y cámara.
-  const bodyMat = new THREE.MeshStandardMaterial({ color: BODY_COLOR, roughness: 0.58, metalness: 0.02 });
+  const bodyMat = createBodyMaterial(BODY_COLOR, TINT_COLOR);
   const joints = buildSkeleton(scene, bodyMat);
-  const baseColor = new THREE.Color(BODY_COLOR);
-  const tintColor = new THREE.Color(TINT_COLOR);
   const tintLevels = {};
   const bands = createBandSystem(scene);
   const cameraRig = createCameraRig(camera, canvas);
@@ -408,20 +408,18 @@ export function createExerciseScene(container, { onFrame } = {}) {
     if (display.handsW > 0.001) {
       SIDES.forEach((s, i) => solveArm(joints, s, display.hands[i], display.handsW));
     }
-    const chestScale = 1 + 0.03 * breath;
-    joints.meshes.chest.scale.z = chestScale;
-    joints.meshes.upperBack.scale.z = 1 + 0.015 * breath;
+    if (joints.chestPart) joints.chestPart.scale.z = 1 + 0.022 * breath;
 
     // 4. Banda (física) y tinte muscular.
     bands.update(animDt, joints, camera.position);
     const works = ex.works ?? [];
     const tintRate = 1 - Math.exp(-animDt * 6);
-    for (const k of Object.keys(joints.meshes)) {
+    for (const k of MUSCLES) {
       const goal = works.includes(k) ? out.activation : 0;
       const cur = tintLevels[k] ?? 0;
       tintLevels[k] = cur + (goal - cur) * tintRate;
     }
-    applyTint(joints.meshes, tintLevels, baseColor, tintColor);
+    applyTint(bodyMat, tintLevels);
 
     if (blob.visible) {
       // La sombra de contacto sigue a la pelvis y se alarga si está tendido.
@@ -431,8 +429,11 @@ export function createExerciseScene(container, { onFrame } = {}) {
       blob.scale.set(lying ? 0.9 : 0.85, lying ? 2.1 : 0.85, 1);
     }
 
-    // 5. Cámara y render.
+    // 5. Cámara y render. El mapa de sombras se recalcula cada 2 frames: en
+    // la sombra suave del piso no se nota y ahorra casi la mitad del dibujo.
     cameraRig.update(dt, now / 1000);
+    shadowTick = (shadowTick + 1) % 2;
+    if (shadowTick === 0) renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
     onFrame?.({ hud: out.hud, mode: out.mode, exerciseId: out.exerciseId });
   }
@@ -466,7 +467,6 @@ export function createExerciseScene(container, { onFrame } = {}) {
     scene.traverse((o) => {
       if (o.geometry) o.geometry.dispose();
     });
-    for (const m of joints.allMeshes) if (m.material !== bodyMat) m.material.dispose();
     [bodyMat, floorMat, glowMat, shadowMat, blobMat, grid.material].forEach((m) => m.dispose());
     glowTex.dispose();
     blobTex.dispose();

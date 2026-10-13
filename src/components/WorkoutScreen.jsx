@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { formatTime } from '../utils.js';
 import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES, TRANSITION_SEC } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
-import { ExerciseViewer } from './ExerciseViewer.jsx';
+import { loadViewer } from './viewerLoader.js';
+
+// El visor 3D (y Three.js) va en un chunk aparte; ver viewerLoader.js.
+const ExerciseViewer = lazy(() => loadViewer().then((m) => ({ default: m.ExerciseViewer })));
 
 const PHASE_STYLE = {
   work:       { text: 'text-work',  border: 'border-work',  label: 'TRABAJO' },
@@ -122,17 +125,19 @@ export function WorkoutScreen({ state, dispatch }) {
 
         <div className="px-5 pb-2">
           <div className="relative bg-scope border border-ink overflow-hidden" style={{ height: '230px' }}>
-            <ExerciseViewer
-              exerciseId={current.exerciseId}
-              nextExerciseId={next?.exerciseId ?? null}
-              phase={state.phase}
-              phaseKey={`${state.exerciseIdx}-${state.set}-${state.phase}`}
-              phaseElapsed={Math.max(0, phaseDuration - state.timeRemaining)}
-              phaseDuration={phaseDuration}
-              workSec={current.workSec}
-              reps={current.reps}
-              paused={state.isPaused}
-            />
+            <Suspense fallback={null}>
+              <ExerciseViewer
+                exerciseId={current.exerciseId}
+                nextExerciseId={next?.exerciseId ?? null}
+                phase={state.phase}
+                phaseKey={`${state.exerciseIdx}-${state.set}-${state.phase}`}
+                phaseElapsed={Math.max(0, phaseDuration - state.timeRemaining)}
+                phaseDuration={phaseDuration}
+                workSec={current.workSec}
+                reps={current.reps}
+                paused={state.isPaused}
+              />
+            </Suspense>
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-ink/60" />
               <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-ink/60" />

@@ -4,6 +4,7 @@ import { StartScreen } from './components/StartScreen.jsx';
 import { CompleteScreen } from './components/CompleteScreen.jsx';
 import { WorkoutScreen } from './components/WorkoutScreen.jsx';
 import { ensureAudio, playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from './audio/beeps.js';
+import { preloadViewerWhenIdle } from './components/viewerLoader.js';
 
 const SKIP_ACTIONS = new Set(['NEXT', 'PREV', 'NEXT_EXERCISE', 'PREV_EXERCISE']);
 
@@ -21,6 +22,9 @@ export default function App() {
     }
     rawDispatch(action);
   }, []);
+
+  // Descarga el visor 3D en segundo plano mientras se muestra el inicio.
+  useEffect(() => preloadViewerWhenIdle(), []);
 
   useEffect(() => {
     if (!state.isStarted || state.isPaused || state.isComplete) return;
