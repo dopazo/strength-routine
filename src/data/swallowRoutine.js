@@ -1,23 +1,32 @@
-// Pauta de deglución: todos los días, mañana y tarde (AM y PM).
-//   sets     — series por sesión
-//   reps     — repeticiones por serie (kind 'reps')
-//   workSec  — segundos por serie (kind 'timed'); con `maxSec` el reloj cuenta
-//              hacia arriba: `workSec` es el mínimo y `maxSec` el tope
-//   perDay   — veces al día indicadas en la pauta (1: basta una sesión al día)
-//   quick    — serie suelta: se hace cada vez que se abre la app (botón en el
-//              inicio) hasta completar `perDay` series al día; las sesiones
-//              de mañana y tarde también traen una
-//   note     — aclaración de la pauta (se muestra en la vista previa)
-export const SESSIONS_PER_DAY = 2;
-
+// Pauta de deglución (fonoaudiología). La persona abre la app y hace en ese
+// momento todo lo que le falta del día: cada sesión trae una vez cada
+// ejercicio que todavía no llega a su frecuencia diaria.
+//   sets      — series cada vez que se hace el ejercicio
+//   reps      — repeticiones por serie (kind 'reps')
+//   workSec   — segundos por serie (kind 'timed'); con `maxSec` el reloj cuenta
+//               hacia arriba: `workSec` es el mínimo y `maxSec` el tope
+//   perDay    — veces al día que indica la pauta (tope: no se ofrece más)
+//   minPerDay — si la pauta da un rango (Masako: 3–4), desde cuántas veces el
+//               día ya cuenta como cumplido
+//   short     — nombre corto para el registro
+//   note      — aclaración de la pauta (se muestra en la vista previa)
 export const SWALLOW_ROUTINE = [
-  { exerciseId: 'mendelsohn', sets: 1, reps: 10, perDay: 2, note: '10 repeticiones de 3 segundos, mañana y tarde.' },
-  { exerciseId: 'lingual', sets: 3, workSec: 20, perDay: 2, note: '3 series de 20 segundos, mañana y tarde.' },
   {
-    exerciseId: 'masako', sets: 1, reps: 10, perDay: 4, quick: true,
-    note: 'Una serie de 10 cada vez que abras la app, en tus ratos libres (las sesiones de mañana y tarde traen una). Meta: 4 series al día. Se anotan las repeticiones logradas.',
+    exerciseId: 'mendelsohn', sets: 1, reps: 10, perDay: 2, short: 'Mendelsohn',
+    note: '10 repeticiones de 3 segundos, 2 veces al día (mañana y tarde).',
   },
-  { exerciseId: 'chewing', sets: 1, workSec: 600, maxSec: 900, perDay: 1, note: '10–15 minutos, una vez al día.' },
+  {
+    exerciseId: 'lingual', sets: 3, workSec: 20, perDay: 2, short: 'Lingual',
+    note: '3 series de 20 segundos, 2 veces al día (mañana y tarde).',
+  },
+  {
+    exerciseId: 'masako', sets: 1, reps: 10, perDay: 4, minPerDay: 3, short: 'Masako',
+    note: '3–4 series de 10 al día, repartidas en el día: una serie cada vez que haces la sesión. Se anotan las repeticiones logradas.',
+  },
+  {
+    exerciseId: 'chewing', sets: 1, workSec: 600, maxSec: 900, perDay: 1, short: 'Chicle',
+    note: '10–15 minutos, una vez al día.',
+  },
 ];
 
 // Texto corto de la dosis (lista y encabezados).
@@ -27,11 +36,20 @@ export function dosage(item) {
   return `${item.sets}×${item.workSec}S`;
 }
 
-// Ejercicios de una sesión completa. Los que van una vez al día (perDay 1)
-// se omiten si ya se hicieron hoy.
-export function sessionItems({ doneToday = [] } = {}) {
-  return SWALLOW_ROUTINE.filter((r) => !(r.perDay === 1 && doneToday.includes(r.exerciseId)));
+// Frecuencia de la pauta en texto corto ("2×día", "3–4×día").
+export const perDayLabel = (item) => `${item.minPerDay ? `${item.minPerDay}–` : ''}${item.perDay}×día`;
+
+// Veces que se hizo hoy (`day` = registro del día, ver swallow/log.js). La
+// masticación cuenta cuando llegó al mínimo de minutos.
+export function timesToday(item, day) {
+  if (item.maxSec) return day.chewDone ? 1 : 0;
+  return day.rounds[item.exerciseId] ?? 0;
 }
 
-// Ejercicio de series sueltas (Masako): se ofrece directo en el inicio.
-export const QUICK_ITEM = SWALLOW_ROUTINE.find((r) => r.quick);
+export const isPending = (item, day) => timesToday(item, day) < item.perDay;
+export const isMet = (item, day) => timesToday(item, day) >= (item.minPerDay ?? item.perDay);
+
+// Ejercicios de la sesión de ahora: los que aún no llegan a su frecuencia.
+export function sessionItems(day) {
+  return SWALLOW_ROUTINE.filter((r) => isPending(r, day));
+}

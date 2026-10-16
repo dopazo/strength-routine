@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { SWALLOW_EXERCISES } from '../../data/swallowExercises.js';
-import { SESSIONS_PER_DAY, dosage } from '../../data/swallowRoutine.js';
+import { dosage, timesToday } from '../../data/swallowRoutine.js';
 import { stageElapsed } from '../../state/swallowReducer.js';
 import { sampleExercise } from '../../swallow/motion.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
@@ -198,8 +198,10 @@ export function SwallowSession({ state, dispatch }) {
   const next = state.items[state.idx + 1];
   const prev = state.items[state.idx - 1];
 
-  let footer = state.full ? `SESIÓN · HOY ${day.sessions}/${SESSIONS_PER_DAY}` : 'EJERCICIO SUELTO';
-  if (item.quick) footer = `MASAKO HOY · ${day.sets[item.exerciseId] ?? 0}/${item.perDay} SERIES`;
+  // Cuántas veces va hoy este ejercicio, según la pauta.
+  const footer = item.maxSec
+    ? (day.chewDone ? 'HOY · LISTO' : 'UNA VEZ AL DÍA')
+    : `HOY · ${timesToday(item, day)}/${item.perDay}`;
 
   const primaryClass = {
     blaze: 'bg-blaze text-ink hover:bg-[#f06028]',
@@ -215,7 +217,7 @@ export function SwallowSession({ state, dispatch }) {
             <div className="flex items-baseline gap-2 min-w-0">
               <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Deglución</span>
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink truncate">
-                {state.full ? 'Sesión' : item.quick && state.items.length === 1 ? 'Serie suelta' : 'Práctica'}
+                {state.full ? 'Sesión' : 'Práctica'}
               </span>
             </div>
             <span className="font-display font-semibold text-ink text-base leading-none tabular-nums">

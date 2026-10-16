@@ -14,7 +14,9 @@ import { repDuration } from '../swallow/motion.js';
 // pantalla final. Los tiempos son marcas de Date.now(), así el reloj no se
 // atrasa aunque el navegador frene los intervalos.
 //
-// `done` acumula lo realizado: { ejercicio: { reps, sets, sec } }.
+// `done` acumula lo realizado: { ejercicio: { reps, sets, sec, rounds } };
+// `rounds` cuenta las veces que se terminó el ejercicio (su última serie,
+// con algo hecho), que es lo que la pauta fija por día.
 
 export function initialSwallowState() {
   return {
@@ -28,6 +30,7 @@ export function initialSwallowState() {
     stage: 'intro',
     stageStart: 0,
     pausedAt: null,
+    progress: false,
     startedAt: 0,
     endedAt: 0,
     done: {},
@@ -42,15 +45,20 @@ const itemOf = (state) => state.items[state.idx];
 const exerciseOf = (state) => SWALLOW_EXERCISES[itemOf(state).exerciseId];
 
 function addDone(done, id, add) {
-  const cur = done[id] ?? { reps: 0, sets: 0, sec: 0 };
+  const cur = done[id] ?? { reps: 0, sets: 0, sec: 0, rounds: 0 };
   return {
     ...done,
-    [id]: { reps: cur.reps + (add.reps ?? 0), sets: cur.sets + (add.sets ?? 0), sec: cur.sec + (add.sec ?? 0) },
+    [id]: {
+      reps: cur.reps + (add.reps ?? 0),
+      sets: cur.sets + (add.sets ?? 0),
+      sec: cur.sec + (add.sec ?? 0),
+      rounds: cur.rounds + (add.rounds ?? 0),
+    },
   };
 }
 
 function enterExercise(state, idx) {
-  return { ...state, idx, set: 1, rep: 0, stage: 'intro', stageStart: 0, pausedAt: null };
+  return { ...state, idx, set: 1, rep: 0, stage: 'intro', stageStart: 0, pausedAt: null, progress: false };
 }
 
 function nextExercise(state, now) {
@@ -64,17 +72,19 @@ function nextExercise(state, now) {
 function finishSet(state, now) {
   const item = itemOf(state);
   const ex = exerciseOf(state);
-  let { done } = state;
+  let { done, progress } = state;
   if (ex.kind === 'timed') {
     const sec = Math.min(stageElapsed(state, now), item.maxSec ?? item.workSec);
     done = addDone(done, item.exerciseId, { sets: 1, sec });
+    if (sec >= 1) progress = true;
   } else if (state.rep > 0) {
     done = addDone(done, item.exerciseId, { sets: 1 });
   }
-  const next = { ...state, done, pausedAt: null };
+  const next = { ...state, done, progress, pausedAt: null };
   if (state.set < item.sets) {
     return { ...next, set: state.set + 1, rep: 0, stage: 'rest', stageStart: now };
   }
+  if (progress) next.done = addDone(done, item.exerciseId, { rounds: 1 });
   return nextExercise(next, now);
 }
 
@@ -102,7 +112,7 @@ export function swallowReducer(state, action) {
         const item = itemOf(state);
         if (stageElapsed(state, now) < repDuration(item.exerciseId, exerciseOf(state))) return state;
         const counted = {
-          ...state, rep: state.rep + 1, done: addDone(state.done, item.exerciseId, { reps: 1 }),
+          ...state, rep: state.rep + 1, progress: true, done: addDone(state.done, item.exerciseId, { reps: 1 }),
         };
         if (counted.rep >= item.reps) return finishSet(counted, now);
         return { ...counted, stage: 'ready', stageStart: now };

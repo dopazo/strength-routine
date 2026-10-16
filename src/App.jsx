@@ -61,7 +61,8 @@ export default function App() {
     ensureAudio();
     const items = only
       ? SWALLOW_ROUTINE.filter((r) => r.exerciseId === only)
-      : sessionItems({ doneToday: getDay().chewDone ? ['chewing'] : [] });
+      : sessionItems(getDay());
+    if (items.length === 0) return;
     swallowDispatch({ type: 'START', items, full, now: Date.now() });
   }, []);
 

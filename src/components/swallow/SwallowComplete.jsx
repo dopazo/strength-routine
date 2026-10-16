@@ -1,33 +1,23 @@
 import React from 'react';
-import { SWALLOW_EXERCISES } from '../../data/swallowExercises.js';
-import { QUICK_ITEM, SESSIONS_PER_DAY } from '../../data/swallowRoutine.js';
+import { SWALLOW_ROUTINE, isMet, sessionItems, timesToday } from '../../data/swallowRoutine.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { formatTime } from '../../utils.js';
+import { Progress } from './Progress.jsx';
 
-// Pantalla final de la sesión de deglución: resumen y lo que queda del día.
+// Pantalla final de la sesión de deglución: lo que se hizo y cómo va el día
+// según la pauta.
 export function SwallowComplete({ state, onHome }) {
   useSwallowLog();
   const day = getDay();
   const total = (state.endedAt - state.startedAt) / 1000;
-  const quickSets = QUICK_ITEM ? day.sets[QUICK_ITEM.exerciseId] ?? 0 : 0;
-  const onlyQuick = state.items.length === 1 && state.items[0].quick;
-  const pending = [];
-  if (day.sessions < SESSIONS_PER_DAY) {
-    const left = SESSIONS_PER_DAY - day.sessions;
-    pending.push(left === 1 ? 'Queda 1 sesión hoy' : `Quedan ${left} sesiones hoy`);
-  }
-  if (QUICK_ITEM && quickSets < QUICK_ITEM.perDay) {
-    const left = QUICK_ITEM.perDay - quickSets;
-    pending.push(`Masako: ${left === 1 ? 'falta 1 serie' : `faltan ${left} series`} hoy`);
-  }
-  if (!day.chewDone) pending.push('Falta la masticación de hoy (10–15 min)');
+  const pending = sessionItems(day);
 
   return (
     <div className="min-h-[100dvh] bg-paper text-ink flex flex-col items-center justify-center px-5 py-8 font-sans">
       <div className="w-full max-w-md">
         <div className="text-center">
           <span className="inline-block px-2.5 py-1 border border-work text-work font-mono text-[10px] uppercase tracking-[0.4em] mb-6">
-            {state.full ? 'Sesión completada' : onlyQuick ? 'Serie lista' : 'Práctica lista'}
+            {state.full ? 'Sesión completada' : 'Práctica lista'}
           </span>
           <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-none mb-7">
             Buen trabajo
@@ -41,48 +31,42 @@ export function SwallowComplete({ state, onHome }) {
               {formatTime(total)}
             </div>
           </div>
-          <div className="grid grid-cols-3">
-            <div className="p-3 border-r border-line">
-              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Hoy</div>
-              <div className="flex items-baseline gap-1 mt-1.5 leading-none">
-                <span className="font-display font-bold text-3xl tabular-nums">{day.sessions}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">/{SESSIONS_PER_DAY} ses.</span>
-              </div>
-            </div>
-            <div className="p-3 border-r border-line">
-              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Masako</div>
-              <div className="flex items-baseline gap-1 mt-1.5 leading-none">
-                <span className={`font-display font-bold text-3xl tabular-nums ${quickSets >= (QUICK_ITEM?.perDay ?? 0) ? 'text-work' : ''}`}>{quickSets}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">/{QUICK_ITEM?.perDay} series</span>
-              </div>
-            </div>
-            <div className="p-3">
-              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Chicle</div>
-              <div className={`font-display font-bold text-3xl mt-1.5 leading-none ${day.chewDone ? 'text-work' : 'text-ink-3'}`}>
-                {day.chewDone ? 'Listo' : '—'}
-              </div>
-            </div>
+          <div className="px-4 py-2.5">
+            <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3 mb-1.5">Pauta de hoy</div>
+            <ul className="space-y-1.5">
+              {SWALLOW_ROUTINE.map((item) => {
+                const n = timesToday(item, day);
+                const met = isMet(item, day);
+                const now = state.done[item.exerciseId];
+                return (
+                  <li key={item.exerciseId} className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]">
+                    <span className="flex-1 min-w-0 truncate text-ink-2">{item.short}</span>
+                    {now && (
+                      <span className="text-ink-3 tabular-nums whitespace-nowrap">
+                        {now.reps ? `+${now.reps} ${now.reps === 1 ? 'rep' : 'reps'}` : now.sec ? `+${formatTime(now.sec)}` : ''}
+                      </span>
+                    )}
+                    <Progress item={item} n={n} size={7} />
+                    <span className={`w-12 text-right tabular-nums ${met ? 'text-work' : 'text-ink-3'}`}>
+                      {met ? 'Listo' : `${n}/${item.perDay}`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
 
-        <ul className="mb-6 space-y-1">
-          {Object.entries(state.done).map(([id, d]) => (
-            <li key={id} className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-ink-2">
-              <span>{SWALLOW_EXERCISES[id].name}</span>
-              <span className="tabular-nums text-ink">
-                {d.reps ? `${d.reps} ${d.reps === 1 ? 'rep' : 'reps'}` : d.sec ? formatTime(d.sec) : `${d.sets} ${d.sets === 1 ? 'serie' : 'series'}`}
-              </span>
-            </li>
-          ))}
-          {(state.done.masako?.reps ?? 0) > 0 && (
-            <li className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-3 pt-1">
-              Hoy van {day.reps.masako ?? 0} {day.reps.masako === 1 ? 'repetición' : 'repeticiones'} de Masako (anotadas en el registro)
-            </li>
+        <p className={`font-mono text-[9px] uppercase tracking-[0.2em] mb-6 leading-relaxed ${pending.length ? 'text-trans' : 'text-work'}`}>
+          {pending.length
+            ? `Falta hoy · ${pending.map((r) => r.short).join(' · ')}. La próxima vez que abras la app, la sesión trae solo eso.`
+            : 'Pauta de hoy completa.'}
+          {(day.reps.masako ?? 0) > 0 && (
+            <span className="block text-ink-3 mt-1">
+              Masako hoy: {day.reps.masako} {day.reps.masako === 1 ? 'repetición lograda' : 'repeticiones logradas'} (en el registro)
+            </span>
           )}
-          {pending.map((p) => (
-            <li key={p} className="font-mono text-[9px] uppercase tracking-[0.2em] text-trans pt-1">{p}</li>
-          ))}
-        </ul>
+        </p>
 
         <button
           onClick={onHome}

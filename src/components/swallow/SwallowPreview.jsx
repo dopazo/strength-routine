@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { SWALLOW_EXERCISES } from '../../data/swallowExercises.js';
-import { dosage } from '../../data/swallowRoutine.js';
+import { dosage, perDayLabel, timesToday } from '../../data/swallowRoutine.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { PreviewModal, ViewerCorners } from '../PreviewModal.jsx';
 import { LazyHeadViewer } from './headLoader.js';
@@ -14,12 +14,9 @@ export function Loading() {
 }
 
 // Lo hecho hoy en un ejercicio, en texto corto.
-export function todayLabel(item, day) {
-  if (item.exerciseId === 'chewing') return day.chewDone ? 'Hecho' : `${Math.floor(day.chewSec / 60)} min`;
-  if (item.quick) return `${day.sets[item.exerciseId] ?? 0}/${item.perDay}`;
-  const ex = SWALLOW_EXERCISES[item.exerciseId];
-  if (ex.kind === 'reps') return `${day.reps[item.exerciseId] ?? 0} reps`;
-  return `${day.sets[item.exerciseId] ?? 0} series`;
+function todayLabel(item, day) {
+  if (item.maxSec) return day.chewDone ? 'Hecho' : `${Math.floor(day.chewSec / 60)} min`;
+  return `${timesToday(item, day)}/${item.perDay}`;
 }
 
 // Vista previa flotante de un ejercicio de deglución: la lámina en bucle,
@@ -46,8 +43,8 @@ export function SwallowPreview({ item, number, onClose, onPractice }) {
         <div className="grid grid-cols-3 mt-2.5 border border-line">
           {[
             ['Dosis', dosage(item)],
-            ['Frecuencia', item.perDay === 1 ? '1×día' : `${item.perDay}×día`],
-            [item.quick ? 'Series hoy' : 'Hoy', todayLabel(item, day)],
+            ['Frecuencia', perDayLabel(item)],
+            ['Hoy', todayLabel(item, day)],
           ].map(([label, value], i) => (
             <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? 'border-r border-line' : ''}`}>
               <div className="font-mono text-[8px] uppercase tracking-[0.3em] text-ink-3">{label}</div>
@@ -64,7 +61,7 @@ export function SwallowPreview({ item, number, onClose, onPractice }) {
           onClick={onPractice}
           className="w-full mt-3 border border-ink/50 hover:bg-paper-2 text-ink py-3 font-display font-semibold uppercase tracking-[0.22em] text-[13px] transition-colors"
         >
-          {item.quick ? 'Hacer una serie ahora' : 'Practicar solo este ejercicio'}
+          Practicar solo este ejercicio
         </button>
       </div>
     </PreviewModal>

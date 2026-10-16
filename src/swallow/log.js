@@ -2,9 +2,10 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 // Registro diario de la rutina de deglución, guardado en este dispositivo
 // (localStorage). La pauta pide anotar las repeticiones logradas cada día;
-// además se cuentan sesiones completas y minutos de masticación.
+// además se cuentan las veces que se completó cada ejercicio (para saber qué
+// falta hoy), las sesiones y los minutos de masticación.
 //
-//   { 'AAAA-MM-DD': { sessions, reps: { ejercicio: n }, sets: { ejercicio: n }, chewSec, chewDone } }
+//   { 'AAAA-MM-DD': { sessions, rounds: { ejercicio: n }, reps: { … }, sets: { … }, chewSec, chewDone } }
 
 const KEY = 'deglucion-registro-v1';
 const KEEP_DAYS = 120;
@@ -44,7 +45,8 @@ function save(next) {
 function update(fn) {
   const all = { ...load() };
   const k = dayKey();
-  const day = { sessions: 0, reps: {}, sets: {}, chewSec: 0, chewDone: false, ...all[k] };
+  const day = { sessions: 0, rounds: {}, reps: {}, sets: {}, chewSec: 0, chewDone: false, ...all[k] };
+  day.rounds = { ...day.rounds };
   day.reps = { ...day.reps };
   day.sets = { ...day.sets };
   fn(day);
@@ -56,6 +58,7 @@ export function getDay(key = dayKey()) {
   const d = load()[key] ?? {};
   return {
     sessions: d.sessions ?? 0,
+    rounds: d.rounds ?? {},
     reps: d.reps ?? {},
     sets: d.sets ?? {},
     chewSec: d.chewSec ?? 0,
@@ -65,6 +68,7 @@ export function getDay(key = dayKey()) {
 
 export const logReps = (exerciseId, n) => n > 0 && update((d) => { d.reps[exerciseId] = (d.reps[exerciseId] ?? 0) + n; });
 export const logSets = (exerciseId, n) => n > 0 && update((d) => { d.sets[exerciseId] = (d.sets[exerciseId] ?? 0) + n; });
+export const logRounds = (exerciseId, n) => n > 0 && update((d) => { d.rounds[exerciseId] = (d.rounds[exerciseId] ?? 0) + n; });
 export const logChew = (sec) => sec > 0 && update((d) => { d.chewSec = Math.round((d.chewSec ?? 0) + sec); });
 export const logSession = () => update((d) => { d.sessions = (d.sessions ?? 0) + 1; });
 // Marca a mano la masticación de hoy (p. ej. si se hizo fuera de la app).
@@ -98,8 +102,8 @@ function subscribe(fn) {
 
 // Pasa al registro lo que va haciendo la sesión (`done` del reducer de
 // deglución): repeticiones al momento, así no se pierden aunque la sesión
-// quede a medias, y la sesión completa al terminar (si se hizo algo: saltar
-// todos los ejercicios no cuenta). Va en App (no en la
+// quede a medias; cada ejercicio terminado, y la sesión al completarse (si
+// se hizo algo: saltar todos los ejercicios no cuenta). Va en App (no en la
 // pantalla de sesión) porque esa pantalla se desmonta justo al completar.
 export function useSwallowLogSync(state) {
   const prev = useRef({ startedAt: state.startedAt, done: {}, counted: false });
@@ -109,8 +113,9 @@ export function useSwallowLogSync(state) {
     }
     const last = prev.current.done;
     for (const [id, d] of Object.entries(state.done)) {
-      const before = last[id] ?? { reps: 0, sets: 0, sec: 0 };
+      const before = last[id] ?? { reps: 0, sets: 0, sec: 0, rounds: 0 };
       logReps(id, d.reps - before.reps);
+      logRounds(id, d.rounds - before.rounds);
       logSets(id, d.sets - before.sets);
       if (id === 'chewing') logChew(d.sec - before.sec);
     }
