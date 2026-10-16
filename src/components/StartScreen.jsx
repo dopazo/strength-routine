@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { ROUTINE, TOTAL_DURATION } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
+import { ExercisePreview } from './ExercisePreview.jsx';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
 export function StartScreen({ onStart }) {
+  const [preview, setPreview] = useState(null);
+  const closePreview = useCallback(() => setPreview(null), []);
   const groups = [];
   const phaseIndex = new Map();
   ROUTINE.forEach((r, i) => {
@@ -50,6 +53,9 @@ export function StartScreen({ onStart }) {
           </div>
         </div>
 
+        <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mb-3">
+          Toca un ejercicio para ver su animación
+        </div>
         <div className="space-y-4 mb-7">
           {groups.map(({ phase, items }) => (
             <div key={phase}>
@@ -65,19 +71,26 @@ export function StartScreen({ onStart }) {
                 {items.map((item) => {
                   const ex = EXERCISES[item.exerciseId];
                   return (
-                    <li key={item.dorsal} className="flex items-center gap-3 py-2 border-b border-line/50 last:border-b-0">
-                      <span className="font-display font-semibold text-[15px] text-ink-2 tabular-nums w-7 leading-none">
-                        {pad2(item.dorsal)}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[14px] leading-tight truncate">{ex.name}</div>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mt-0.5 truncate">
-                          {ex.muscles}
+                    <li key={item.dorsal} className="border-b border-line/50 last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => setPreview(item)}
+                        className="w-full flex items-center gap-3 py-2 text-left hover:bg-paper-2 active:bg-paper-2 transition-colors"
+                        aria-label={`Ver vista previa de ${ex.name}`}
+                      >
+                        <span className="font-display font-semibold text-[15px] text-ink-2 tabular-nums w-7 leading-none">
+                          {pad2(item.dorsal)}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] leading-tight truncate">{ex.name}</div>
+                          <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mt-0.5 truncate">
+                            {ex.muscles}
+                          </div>
                         </div>
-                      </div>
-                      <div className="font-mono text-[11px] text-ink-2 tabular-nums whitespace-nowrap">
-                        {item.sets}×{item.workSec}S
-                      </div>
+                        <div className="font-mono text-[11px] text-ink-2 tabular-nums whitespace-nowrap">
+                          {item.sets}×{item.workSec}S
+                        </div>
+                      </button>
                     </li>
                   );
                 })}
@@ -97,6 +110,7 @@ export function StartScreen({ onStart }) {
           Necesitas · banda elástica plana · espacio para moverte
         </p>
       </div>
+      {preview && <ExercisePreview item={preview} onClose={closePreview} />}
     </div>
   );
 }
