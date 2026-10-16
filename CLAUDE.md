@@ -73,7 +73,7 @@ Same layering — data → animation → drawing → UI — but 2D and lighter (
 
 ### Data
 - `src/data/swallowExercises.js` — per exercise: `name`, `target`, `instructions`, optional `tip`, `kind` (`'reps'`: the person taps to start each guided rep; `'timed'`: sets by time, pausable), `views` (`'side'` cut and/or `'front'`, first = default), `labels` per view, `idle` pose, and the animation: `rep` timeline (`{to: pose, dur, cue, effort?}` / `{hold: s, cue, countdown?, pulse?}`), `work` for sustained sets (`{from, pose, ramp, cues}`), optional `demo` loop, or `procedural: 'chew'`. The header comment documents every field.
-- `src/data/swallowRoutine.js` — `SWALLOW_ROUTINE` rows `{exerciseId, sets, reps | workSec (+ maxSec = count-up with a minimum), perDay, note}`, `SESSIONS_PER_DAY`, `dosage()`, `sessionItems()` (a full session skips `perDay: 1` exercises already done today).
+- `src/data/swallowRoutine.js` — `SWALLOW_ROUTINE` rows `{exerciseId, sets, reps | workSec (+ maxSec = count-up with a minimum), perDay, quick?, note}`, `SESSIONS_PER_DAY`, `dosage()`, `sessionItems()` (a full session skips `perDay: 1` exercises already done today). `quick` (Masako) = one series each time the app is opened, from a button at the top of the Deglución tab, until `perDay` series today (the AM/PM sessions include one too); exported as `QUICK_ITEM`.
 
 ### Drawing (`src/swallow/`)
 - `shapes.js` — Catmull-Rom → Bézier `smoothPath` (points with `c: 1` are corners), ellipse/polyline helpers, `mixColor`.
@@ -82,15 +82,15 @@ Same layering — data → animation → drawing → UI — but 2D and lighter (
 - `views.js` — registers both views (`viewBox`, `layers`, `clips`, `compute(params)`, `anchors`) and the anatomy `LABELS`.
 - `headPoses.js` — named poses: flat dicts of parameters (`jaw`, `hyo`, `epi`, `velum`, tongue shapes, effort tints, `hand`, `xray`, `gum`…); the header documents each one.
 - `motion.js` — `buildTimeline`/`sampleTimeline` (ease between poses, holds with countdown and pulsing effort), `chewSample` (teardrop chewing cycle, switches side every 8 chews) and `sampleExercise(id, ex, mode, t)` for modes `demo | rep | work | idle`.
-- `log.js` — daily log in `localStorage` (`deglucion-registro-v1`): sessions, reps/sets per exercise, chewing seconds (`chewDone` at ≥ 10 min, or toggled by hand on today's cell). `useSwallowLog()` re-renders on change.
+- `log.js` — daily log in `localStorage` (`deglucion-registro-v1`): sessions, reps/sets per exercise, chewing seconds (`chewDone` at ≥ 10 min, or toggled by hand on today's cell). `useSwallowLog()` re-renders on change; `useSwallowLogSync(state)` (called in `App`, since the session screen unmounts on completion) writes the reducer's `done` diffs and counts a full session once something was done.
 
 ### State (`src/state/swallowReducer.js`)
-Per exercise: `intro` (demo loop) → `rep`/`ready` (reps kind) or `work`/`rest` (timed kind) → next exercise's `intro` → `complete`. Times are `Date.now()` stamps (`stageStart`, `pausedAt`), so timers survive throttled intervals. Actions: `START {items, full}`, `GO`, `TICK`, `TOGGLE_PAUSE`, `STOP_REP`, `END_SET`, `NEXT_EXERCISE`, `PREV_EXERCISE`, `EXIT`. `done` accumulates `{reps, sets, sec}` per exercise; `SwallowSession` syncs it to the log as it changes and counts a session when a full one completes.
+Per exercise: `intro` (demo loop) → `rep`/`ready` (reps kind) or `work`/`rest` (timed kind) → next exercise's `intro` → `complete`. Times are `Date.now()` stamps (`stageStart`, `pausedAt`), so timers survive throttled intervals. Actions: `START {items, full}`, `GO`, `TICK`, `TOGGLE_PAUSE`, `STOP_REP`, `END_SET`, `NEXT_EXERCISE`, `PREV_EXERCISE`, `EXIT`. `done` accumulates `{reps, sets, sec}` per exercise (a set ended early counts if it had at least one rep).
 
 ### UI (`src/components/swallow/`)
 - `HeadSvg.jsx` — one nested `<svg>` per view; `update(params, mix)` writes only changed attributes (no React re-render).
 - `HeadViewer.jsx` — owns the rAF loop: samples the exercise for its `mode`/`modeKey` (clock from `clockStart`/`pausedAt` or its own), crossfades on any change, fades between views, positions labels and writes the HUD (cue, countdown, progress, chewing side). The person can switch Corte/Frente.
-- `SwallowHome.jsx` (tab content: stats, 7-day log for the therapist, exercise list), `SwallowPreview.jsx` (modal + "practice only this one"), `SwallowSession.jsx` (no-scroll session screen; 100 ms `TICK` while something runs, guide beeps, screen wake lock), `SwallowComplete.jsx`.
+- `SwallowHome.jsx` (tab content: stats, Masako quick-series card, 7-day log for the therapist, exercise list), `SwallowPreview.jsx` (modal + "practice only this one"), `SwallowSession.jsx` (no-scroll session screen; 100 ms `TICK` while something runs, guide beeps, screen wake lock), `SwallowComplete.jsx`.
 
 ### Head Lab (`src/dev/HeadLab.jsx`)
 Dev-only: `bun run dev` → `http://localhost:5173/strength-routine/?headlab`. Pick an exercise and mode (`demo | rep | work | idle | params`), freeze at a time, or drive every parameter with sliders. URL params (`ex`, `mode`, `t`, `dur`, `view`, `p=jaw:10,tPress:1`, `nohud`, `capture=1`) make it scriptable for screenshots.

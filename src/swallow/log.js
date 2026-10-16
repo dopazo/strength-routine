@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 // Registro diario de la rutina de deglución, guardado en este dispositivo
 // (localStorage). La pauta pide anotar las repeticiones logradas cada día;
@@ -94,6 +94,32 @@ function subscribe(fn) {
     listeners.delete(fn);
     window.removeEventListener('storage', onStorage);
   };
+}
+
+// Pasa al registro lo que va haciendo la sesión (`done` del reducer de
+// deglución): repeticiones al momento, así no se pierden aunque la sesión
+// quede a medias, y la sesión completa al terminar (si se hizo algo: saltar
+// todos los ejercicios no cuenta). Va en App (no en la
+// pantalla de sesión) porque esa pantalla se desmonta justo al completar.
+export function useSwallowLogSync(state) {
+  const prev = useRef({ startedAt: state.startedAt, done: {}, counted: false });
+  useEffect(() => {
+    if (prev.current.startedAt !== state.startedAt) {
+      prev.current = { startedAt: state.startedAt, done: {}, counted: false };
+    }
+    const last = prev.current.done;
+    for (const [id, d] of Object.entries(state.done)) {
+      const before = last[id] ?? { reps: 0, sets: 0, sec: 0 };
+      logReps(id, d.reps - before.reps);
+      logSets(id, d.sets - before.sets);
+      if (id === 'chewing') logChew(d.sec - before.sec);
+    }
+    prev.current.done = state.done;
+    if (state.complete && state.full && !prev.current.counted && Object.keys(state.done).length > 0) {
+      prev.current.counted = true;
+      logSession();
+    }
+  }, [state.done, state.complete, state.full, state.startedAt]);
 }
 
 // Hook: re-renderiza cuando cambia el registro. Devuelve el objeto completo

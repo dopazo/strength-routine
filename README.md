@@ -3,7 +3,7 @@
 Exercise app with two programs (UI in Spanish), picked with the tabs on the start screen:
 
 - **Fuerza** — strength-training routine for **flat open resistance bands** (therapy bands — long flat strips, no handles). Designed to train the major muscle groups and help maintain endurance.
-- **Deglución** — swallowing-muscle exercises prescribed by a speech therapist (Mendelsohn, isometric tongue press, Masako, gum chewing), twice a day. User-paced: the person taps when ready for each rep or set.
+- **Deglución** — swallowing-muscle exercises prescribed by a speech therapist (Mendelsohn, isometric tongue press, Masako, gum chewing), twice a day; Masako also as a single series each time the app is opened, up to 4 a day. User-paced: the person taps when ready for each rep or set.
 
 Every exercise is rendered in 3D with an articulated mannequin animated in real time: quaternion interpolation, foot IK so feet stay planted, a training tempo (fast concentric, slow eccentric) synced to the routine's reps, and a flat band simulated with Verlet physics whose color shifts lime → red as it stretches.
 
@@ -13,7 +13,7 @@ Every exercise is rendered in 3D with an articulated mannequin animated in real 
   <img src="docs/workout-screen.png" alt="Workout view with 3D viewer" width="320" />
 </p>
 
-The swallowing exercises are shown on animated head plates drawn in SVG: a **sagittal cut** (tongue, palate, soft palate, epiglottis, hyoid, larynx and a saliva bolus travelling to the esophagus) and a **front view** (what the person sees in the mirror: mouth, tongue, Adam's apple, a hand on the throat, masseters and an x-ray view of the gum between the molars). Both are driven by the same pose parameters (jaw, tongue shapes, larynx elevation…), so they stay in sync and the person can switch between them. A 7-day log on the device records sessions, Masako repetitions and chewing, as the prescription asks.
+The swallowing exercises are shown on animated head plates drawn in SVG: a **sagittal cut** (tongue, palate, soft palate, epiglottis, hyoid, larynx and a saliva bolus travelling to the esophagus) and a **front view** (what the person sees in the mirror: mouth, tongue, Adam's apple, a hand on the throat, masseters and an x-ray view of the gum between the molars). Both are driven by the same pose parameters (jaw, tongue shapes, larynx elevation…), so they stay in sync and the person can switch between them. A 7-day log on the device records sessions, Masako series and repetitions, and chewing, as the prescription asks.
 
 <p>
   <img src="docs/swallow-start.png" alt="Swallowing program overview" width="320" />

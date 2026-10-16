@@ -3,7 +3,7 @@ import { SWALLOW_EXERCISES } from '../../data/swallowExercises.js';
 import { SESSIONS_PER_DAY, dosage } from '../../data/swallowRoutine.js';
 import { stageElapsed } from '../../state/swallowReducer.js';
 import { sampleExercise } from '../../swallow/motion.js';
-import { getDay, logChew, logReps, logSession, logSets, useSwallowLog } from '../../swallow/log.js';
+import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from '../../audio/beeps.js';
 import { formatTime } from '../../utils.js';
 import { ViewerCorners } from '../PreviewModal.jsx';
@@ -51,30 +51,6 @@ function useWakeLock(active) {
       lock?.release().catch(() => {});
     };
   }, [active]);
-}
-
-// Pasa al registro diario lo que se va haciendo (repeticiones al momento,
-// así no se pierden aunque la sesión quede a medias).
-function useLogSync(state) {
-  const prev = useRef({ startedAt: state.startedAt, done: {}, counted: false });
-  useEffect(() => {
-    const p = prev.current;
-    if (p.startedAt !== state.startedAt) {
-      prev.current = { startedAt: state.startedAt, done: {}, counted: false };
-    }
-    const last = prev.current.done;
-    for (const [id, d] of Object.entries(state.done)) {
-      const before = last[id] ?? { reps: 0, sets: 0, sec: 0 };
-      logReps(id, d.reps - before.reps);
-      logSets(id, d.sets - before.sets);
-      if (id === 'chewing') logChew(d.sec - before.sec);
-    }
-    prev.current.done = state.done;
-    if (state.complete && state.full && !prev.current.counted) {
-      prev.current.counted = true;
-      logSession();
-    }
-  }, [state.done, state.complete, state.full, state.startedAt]);
 }
 
 // Pitidos guía: aguantar, cada segundo de la cuenta, soltar; últimos
@@ -185,7 +161,6 @@ export function SwallowSession({ state, dispatch }) {
     : null;
 
   useWakeLock(true);
-  useLogSync(state);
   useBeeps(state, sample, elapsed, item);
 
   const status = statusOf(state, item, ex, sample, elapsed);
@@ -224,7 +199,7 @@ export function SwallowSession({ state, dispatch }) {
   const prev = state.items[state.idx - 1];
 
   let footer = state.full ? `SESIÓN · HOY ${day.sessions}/${SESSIONS_PER_DAY}` : 'EJERCICIO SUELTO';
-  if (item.exerciseId === 'masako') footer = `MASAKO HOY · ${day.reps.masako ?? 0} REPS`;
+  if (item.quick) footer = `MASAKO HOY · ${day.sets[item.exerciseId] ?? 0}/${item.perDay} SERIES`;
 
   const primaryClass = {
     blaze: 'bg-blaze text-ink hover:bg-[#f06028]',
@@ -240,7 +215,7 @@ export function SwallowSession({ state, dispatch }) {
             <div className="flex items-baseline gap-2 min-w-0">
               <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Deglución</span>
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink truncate">
-                {state.full ? 'Sesión' : 'Práctica'}
+                {state.full ? 'Sesión' : item.quick && state.items.length === 1 ? 'Serie suelta' : 'Práctica'}
               </span>
             </div>
             <span className="font-display font-semibold text-ink text-base leading-none tabular-nums">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SWALLOW_EXERCISES } from '../../data/swallowExercises.js';
-import { SESSIONS_PER_DAY } from '../../data/swallowRoutine.js';
+import { QUICK_ITEM, SESSIONS_PER_DAY } from '../../data/swallowRoutine.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { formatTime } from '../../utils.js';
 
@@ -9,11 +9,16 @@ export function SwallowComplete({ state, onHome }) {
   useSwallowLog();
   const day = getDay();
   const total = (state.endedAt - state.startedAt) / 1000;
-  const masako = state.done.masako?.reps ?? 0;
+  const quickSets = QUICK_ITEM ? day.sets[QUICK_ITEM.exerciseId] ?? 0 : 0;
+  const onlyQuick = state.items.length === 1 && state.items[0].quick;
   const pending = [];
   if (day.sessions < SESSIONS_PER_DAY) {
     const left = SESSIONS_PER_DAY - day.sessions;
     pending.push(left === 1 ? 'Queda 1 sesión hoy' : `Quedan ${left} sesiones hoy`);
+  }
+  if (QUICK_ITEM && quickSets < QUICK_ITEM.perDay) {
+    const left = QUICK_ITEM.perDay - quickSets;
+    pending.push(`Masako: ${left === 1 ? 'falta 1 serie' : `faltan ${left} series`} hoy`);
   }
   if (!day.chewDone) pending.push('Falta la masticación de hoy (10–15 min)');
 
@@ -22,7 +27,7 @@ export function SwallowComplete({ state, onHome }) {
       <div className="w-full max-w-md">
         <div className="text-center">
           <span className="inline-block px-2.5 py-1 border border-work text-work font-mono text-[10px] uppercase tracking-[0.4em] mb-6">
-            {state.full ? 'Sesión completada' : 'Práctica lista'}
+            {state.full ? 'Sesión completada' : onlyQuick ? 'Serie lista' : 'Práctica lista'}
           </span>
           <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-none mb-7">
             Buen trabajo
@@ -47,8 +52,8 @@ export function SwallowComplete({ state, onHome }) {
             <div className="p-3 border-r border-line">
               <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Masako</div>
               <div className="flex items-baseline gap-1 mt-1.5 leading-none">
-                <span className="font-display font-bold text-3xl tabular-nums">{day.reps.masako ?? 0}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">reps</span>
+                <span className={`font-display font-bold text-3xl tabular-nums ${quickSets >= (QUICK_ITEM?.perDay ?? 0) ? 'text-work' : ''}`}>{quickSets}</span>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">/{QUICK_ITEM?.perDay} series</span>
               </div>
             </div>
             <div className="p-3">
@@ -65,13 +70,13 @@ export function SwallowComplete({ state, onHome }) {
             <li key={id} className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-ink-2">
               <span>{SWALLOW_EXERCISES[id].name}</span>
               <span className="tabular-nums text-ink">
-                {d.reps ? `${d.reps} reps` : d.sec ? formatTime(d.sec) : `${d.sets} series`}
+                {d.reps ? `${d.reps} ${d.reps === 1 ? 'rep' : 'reps'}` : d.sec ? formatTime(d.sec) : `${d.sets} ${d.sets === 1 ? 'serie' : 'series'}`}
               </span>
             </li>
           ))}
-          {masako > 0 && (
+          {(state.done.masako?.reps ?? 0) > 0 && (
             <li className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-3 pt-1">
-              Repeticiones de Masako anotadas en el registro de hoy
+              Hoy van {day.reps.masako ?? 0} {day.reps.masako === 1 ? 'repetición' : 'repeticiones'} de Masako (anotadas en el registro)
             </li>
           )}
           {pending.map((p) => (

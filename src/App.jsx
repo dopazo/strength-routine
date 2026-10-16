@@ -7,7 +7,7 @@ import { ensureAudio, playCountdownBeep, playPhaseChangeBeep, playSkipBeep } fro
 import { preloadViewerWhenIdle } from './components/viewerLoader.js';
 import { initialSwallowState, swallowReducer } from './state/swallowReducer.js';
 import { SWALLOW_ROUTINE, sessionItems } from './data/swallowRoutine.js';
-import { getDay } from './swallow/log.js';
+import { getDay, useSwallowLogSync } from './swallow/log.js';
 import { SwallowSession } from './components/swallow/SwallowSession.jsx';
 import { SwallowComplete } from './components/swallow/SwallowComplete.jsx';
 import { preloadHeadViewerWhenIdle } from './components/swallow/headLoader.js';
@@ -30,6 +30,7 @@ export default function App() {
   const [state, rawDispatch] = useReducer(workoutReducer, null, getInitialState);
   const [swallow, swallowDispatch] = useReducer(swallowReducer, null, initialSwallowState);
   const [program, setProgram] = useState(readProgram);
+  useSwallowLogSync(swallow);
   const lastSkipAtRef = useRef(0);
   const beepRef = useRef({
     timeRemaining: state.timeRemaining,

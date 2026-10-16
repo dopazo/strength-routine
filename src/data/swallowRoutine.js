@@ -4,15 +4,18 @@
 //   workSec  — segundos por serie (kind 'timed'); con `maxSec` el reloj cuenta
 //              hacia arriba: `workSec` es el mínimo y `maxSec` el tope
 //   perDay   — veces al día indicadas en la pauta (1: basta una sesión al día)
+//   quick    — serie suelta: se hace cada vez que se abre la app (botón en el
+//              inicio) hasta completar `perDay` series al día; las sesiones
+//              de mañana y tarde también traen una
 //   note     — aclaración de la pauta (se muestra en la vista previa)
 export const SESSIONS_PER_DAY = 2;
 
 export const SWALLOW_ROUTINE = [
-  { exerciseId: 'mendelsohn', sets: 1, reps: 10, perDay: 2, note: '10 repeticiones de 3 segundos.' },
-  { exerciseId: 'lingual', sets: 3, workSec: 20, perDay: 2, note: '3 series de 20 segundos.' },
+  { exerciseId: 'mendelsohn', sets: 1, reps: 10, perDay: 2, note: '10 repeticiones de 3 segundos, mañana y tarde.' },
+  { exerciseId: 'lingual', sets: 3, workSec: 20, perDay: 2, note: '3 series de 20 segundos, mañana y tarde.' },
   {
-    exerciseId: 'masako', sets: 2, reps: 10, perDay: 2,
-    note: 'La pauta pide 3–4 series de 10 al día, repartidas en ratos libres: 2 por sesión. Se anotan las repeticiones logradas.',
+    exerciseId: 'masako', sets: 1, reps: 10, perDay: 4, quick: true,
+    note: 'Una serie de 10 cada vez que abras la app, en tus ratos libres (las sesiones de mañana y tarde traen una). Meta: 4 series al día. Se anotan las repeticiones logradas.',
   },
   { exerciseId: 'chewing', sets: 1, workSec: 600, maxSec: 900, perDay: 1, note: '10–15 minutos, una vez al día.' },
 ];
@@ -30,4 +33,5 @@ export function sessionItems({ doneToday = [] } = {}) {
   return SWALLOW_ROUTINE.filter((r) => !(r.perDay === 1 && doneToday.includes(r.exerciseId)));
 }
 
-export const perDayLabel = (item) => (item.perDay === 1 ? '1 vez al día' : `${item.perDay} veces al día`);
+// Ejercicio de series sueltas (Masako): se ofrece directo en el inicio.
+export const QUICK_ITEM = SWALLOW_ROUTINE.find((r) => r.quick);
