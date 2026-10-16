@@ -19,3 +19,16 @@
   --color-rest: #7B95B0;
   --color-trans: #E0A03A;
 }
+
+/* Vista previa flotante de la pantalla de inicio. */
+@keyframes preview-fade {
+  from { opacity: 0; }
+}
+@keyframes preview-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+}
+.preview-backdrop { animation: preview-fade 180ms ease-out; }
+.preview-panel { animation: preview-pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .preview-backdrop, .preview-panel { animation: none; }
+}

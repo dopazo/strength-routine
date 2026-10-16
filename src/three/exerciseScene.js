@@ -472,6 +472,9 @@ export function createExerciseScene(container, { onFrame } = {}) {
     blobTex.dispose();
     key.shadow.map?.dispose();
     renderer.dispose();
+    // Libera el contexto WebGL de inmediato: la vista previa del inicio crea
+    // y destruye un visor cada vez que se abre.
+    renderer.forceContextLoss();
     if (canvas.parentNode === container) container.removeChild(canvas);
   }
 

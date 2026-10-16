@@ -56,7 +56,7 @@ Four layers stacked from data → animation → engine → UI. Adding a new exer
 Lazy-loaded: `WorkoutScreen` imports it through `viewerLoader.js`, so Three.js lives in a separate chunk that `App.jsx` preloads while the start screen is idle (the start screen only downloads ~70 KB gzip). Creates the scene **once** in a `useEffect([])`; props (`exerciseId`, `nextExerciseId`, `phase`, `phaseKey`, `phaseElapsed`, `phaseDuration`, `workSec`, `reps`, `paused`) are forwarded with `setContext`/`setPaused`, so the scene is never rebuilt. The HUD (rep counter, cue, ROM bar, preview label) is written straight to the DOM from the frame callback, without React re-renders.
 
 ### Screens (`src/components/`)
-`StartScreen`, `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete`. `WorkoutScreen` is the only consumer of `ExerciseViewer`.
+`StartScreen`, `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete`. `WorkoutScreen` and `ExercisePreview` consume `ExerciseViewer`. Tapping an exercise on the start screen opens `ExercisePreview`, a floating modal that mounts its own viewer in `demo` mode with `freeRun` (looped, orbitable) and disposes it on close; it closes with the X, a tap on the backdrop, or Escape.
 In mobile, entire screen with no scroll.
 
 ### Pose Lab (`src/dev/PoseLab.jsx`)
