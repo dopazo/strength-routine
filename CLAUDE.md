@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Goal
 
-Strength-training routine app for **flat open resistance bands** (therapy bands) — long flat strips, no handles. The user has no access to free weights, so every exercise must be designed to load major muscle groups using only one or more flat bands. Spanish-language UI; user-facing copy stays in Spanish.
+Two programs, picked with the tabs on the start screen (the choice is remembered in `localStorage` under `programa`):
+
+1. **Fuerza** — strength-training routine for **flat open resistance bands** (therapy bands) — long flat strips, no handles. The user has no access to free weights, so every exercise must be designed to load major muscle groups using only one or more flat bands.
+2. **Deglución** — swallowing-muscle exercises prescribed by a speech therapist (fonoaudiólogo): Mendelsohn and isometric tongue press 2×/day, Masako 3–4 series/day, gum chewing 1×/day. The prescription rules: each time the person opens the app they do a session with whatever is still pending today (each exercise once), so with 4 openings the first two bring everything and the rest only Masako. User-paced: no timed rests, the person taps when ready. Animated 2D head "plates" (SVG) show what happens inside (sagittal cut) and outside (front view). See *Swallowing program* below.
+
+Spanish-language UI; user-facing copy stays in Spanish.
 
 ## Stack & commands
 
@@ -23,7 +28,7 @@ For Cloudflare Pages or root-domain hosting, remove the `base` line.
 
 ## Architecture
 
-Four layers stacked from data → animation → engine → UI. Adding a new exercise touches data mostly.
+Four layers stacked from data → animation → engine → UI. Adding a new exercise touches data mostly. The sections below describe the strength program; the swallowing program reuses the same idea with its own modules (last section).
 
 ### Data (`src/data/`)
 - `poses.js` — each pose is a flat dict of Euler XYZ joint angles (`shoulderL`, `elbowR`, `hipL`, `kneeR`, …) plus `rootPos` (world position of the pelvis = hip-joint center; standing ≈ `[0, 1.0, 0]`), `rootRot`, `torsoRot`. Optional: `headRot` (otherwise the head compensates part of the torso lean) and `lumbarRot` + `thoracicRot` (explicit spine segments; otherwise `torsoRot` is split between hip hinge and upper spine). Angles in radians via `d()` from `utils.js`. Every pose should leave the ankles at y ≈ 0.07 (feet flat on the floor). The header comment documents the axis conventions (figure faces +Z, "L" side is x<0).
@@ -53,16 +58,51 @@ Four layers stacked from data → animation → engine → UI. Adding a new exer
 - `exerciseScene.js` — `createExerciseScene(container, {onFrame})` returns `{setContext, setPaused, dispose}`. Owns renderer, lights, shadows and floor. Per frame: a smooth clock synced to the reducer's elapsed time → director → target pose; an automatic crossfade on any discontinuity (phase or exercise change, user skips), routed through `crouchLow`/`sitFloor` when going between standing and floor postures; secondary motion (breathing, weight shift, head); feet always IK-planted at the anchor pose (hands too with `plantHands`, or along a straight path with `handPath`); band physics; muscle tint from activation; camera. The shadow map is refreshed every other frame. Adaptive quality: if the viewer can't sustain ~45 fps it lowers the pixel ratio, then swaps real-time shadows for a cheap contact shadow.
 
 ### Viewer (`src/components/ExerciseViewer.jsx`)
-Lazy-loaded: `WorkoutScreen` imports it through `viewerLoader.js`, so Three.js lives in a separate chunk that `App.jsx` preloads while the start screen is idle (the start screen only downloads ~70 KB gzip). Creates the scene **once** in a `useEffect([])`; props (`exerciseId`, `nextExerciseId`, `phase`, `phaseKey`, `phaseElapsed`, `phaseDuration`, `workSec`, `reps`, `paused`) are forwarded with `setContext`/`setPaused`, so the scene is never rebuilt. The HUD (rep counter, cue, ROM bar, preview label) is written straight to the DOM from the frame callback, without React re-renders.
+Lazy-loaded: `WorkoutScreen` imports it through `viewerLoader.js`, so Three.js lives in a separate chunk that `App.jsx` preloads while the start screen is idle (the start screen only downloads ~80 KB gzip). Creates the scene **once** in a `useEffect([])`; props (`exerciseId`, `nextExerciseId`, `phase`, `phaseKey`, `phaseElapsed`, `phaseDuration`, `workSec`, `reps`, `paused`) are forwarded with `setContext`/`setPaused`, so the scene is never rebuilt. The HUD (rep counter, cue, ROM bar, preview label) is written straight to the DOM from the frame callback, without React re-renders.
 
 ### Screens (`src/components/`)
-`StartScreen`, `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete`. `WorkoutScreen` and `ExercisePreview` consume `ExerciseViewer`. Tapping an exercise on the start screen opens `ExercisePreview`, a floating modal that mounts its own viewer in `demo` mode with `freeRun` (looped, orbitable) and disposes it on close; it closes with the X, a tap on the backdrop, or Escape.
+`StartScreen` (program tabs + `StrengthHome` or `SwallowHome`), `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete` (and the swallow reducer's `active`/`complete`, checked first). `WorkoutScreen` and `ExercisePreview` consume `ExerciseViewer`. Tapping an exercise on the start screen opens `ExercisePreview`, a floating modal (frame, backdrop, Escape and focus handling live in `PreviewModal.jsx`, shared with the swallowing preview) that mounts its own viewer in `demo` mode with `freeRun` (looped, orbitable) and disposes it on close; it closes with the X, a tap on the backdrop, or Escape.
 In mobile, entire screen with no scroll.
 
 ### Pose Lab (`src/dev/PoseLab.jsx`)
 Dev-only tool: `bun run dev` → `http://localhost:5173/strength-routine/?lab`. Plays any exercise (looped, frozen at a time, or in work/rest/transition mode), edits a pose with sliders and copies it in `poses.js` format. URL params (`ex`, `mode`, `t`, `pose`, `yaw`, `pitch`, `dist`, `ty`, `capture=1`) make it scriptable for screenshots. `main.jsx` only loads it when `import.meta.env.DEV`, so it is stripped from production builds.
 
+## Swallowing program (Deglución)
+
+Same layering — data → animation → drawing → UI — but 2D and lighter (no Three.js). The plates are lazy-loaded (`components/swallow/headLoader.js`) and preloaded while the Deglución tab is open.
+
+### Data
+- `src/data/swallowExercises.js` — per exercise: `name`, `target`, `instructions`, optional `tip`, `kind` (`'reps'`: the person taps to start each guided rep; `'timed'`: sets by time, pausable), `views` (`'side'` cut and/or `'front'`, first = default), `labels` per view, `idle` pose, and the animation: `rep` timeline (`{to: pose, dur, cue, effort?}` / `{hold: s, cue, countdown?, pulse?}`), `work` for sustained sets (`{from, pose, ramp, cues}`), optional `demo` loop, or `procedural: 'chew'`. The header comment documents every field.
+- `src/data/swallowRoutine.js` — `SWALLOW_ROUTINE` rows `{exerciseId, sets, reps | workSec (+ maxSec = count-up with a minimum), perDay, minPerDay?, short, note}`. `perDay` is the prescription's daily cap; `minPerDay` marks a range (Masako 3–4) as met from that count. `timesToday(item, day)` (completed rounds from the log; chewing = `chewDone`), `isPending`, `isMet`, and `sessionItems(day)` — the session for *now*: every exercise still under its `perDay`, once each.
+
+### Drawing (`src/swallow/`)
+- `shapes.js` — Catmull-Rom → Bézier `smoothPath` (points with `c: 1` are corners), ellipse/polyline helpers, `mixColor`.
+- `sideView.js` — mid-sagittal cut of head and neck in ≈ millimetres (x forward, y down): skin, airway, palate, velum, tongue, teeth, mandible, hyoid, epiglottis, larynx, trachea, esophagus, spine. Points carry skinning weights (`j` jaw rotation about the TMJ, `h` hyoid, `l` larynx elevation) and some shapes have morph targets (tongue: `tCup`, `tSqueeze`, `tBack`, `tPress`, `tOut`; velum; lips), whose `a` anchors make points ignore the jaw (tongue pressed to the palate with the mouth open). Organs are drawn over a generous air polygon, so moving an organ reveals or hides air.
+- `frontView.js` — mannequin face in the same units and mirror convention as the 3D figure (person's left = screen left): jaw opening/lateral shift, lips, teeth and tongue clipped to the mouth opening (`clip_mouth`), protruded tongue, Adam's apple, hand on the throat, masseters and an x-ray view of molars + gum for chewing.
+- `views.js` — registers both views (`viewBox`, `layers`, `clips`, `compute(params)`, `anchors`) and the anatomy `LABELS`.
+- `headPoses.js` — named poses: flat dicts of parameters (`jaw`, `hyo`, `epi`, `velum`, tongue shapes, effort tints, `hand`, `xray`, `gum`…); the header documents each one.
+- `motion.js` — `buildTimeline`/`sampleTimeline` (ease between poses, holds with countdown and pulsing effort), `chewSample` (teardrop chewing cycle, switches side every 8 chews) and `sampleExercise(id, ex, mode, t)` for modes `demo | rep | work | idle`.
+- `log.js` — daily log in `localStorage` (`deglucion-registro-v1`): sessions, `rounds` (times each exercise was completed), reps/sets per exercise, chewing seconds (`chewDone` at ≥ 10 min, or toggled by hand on today's cell). `useSwallowLog()` re-renders on change; `useSwallowLogSync(state)` (called in `App`, since the session screen unmounts on completion) writes the reducer's `done` diffs and counts a full session once something was done.
+
+### State (`src/state/swallowReducer.js`)
+Per exercise: `intro` (demo loop) → `rep`/`ready` (reps kind) or `work`/`rest` (timed kind) → next exercise's `intro` → `complete`. Times are `Date.now()` stamps (`stageStart`, `pausedAt`), so timers survive throttled intervals. Actions: `START {items, full}`, `GO`, `TICK`, `TOGGLE_PAUSE`, `STOP_REP`, `END_SET`, `NEXT_EXERCISE`, `PREV_EXERCISE`, `EXIT`. `done` accumulates `{reps, sets, sec, rounds}` per exercise: a set ended early counts if it had at least one rep, and `rounds` +1 when the exercise's last set finishes with something done (skipping doesn't count).
+
+### UI (`src/components/swallow/`)
+- `HeadSvg.jsx` — one nested `<svg>` per view; `update(params, mix)` writes only changed attributes (no React re-render).
+- `HeadViewer.jsx` — owns the rAF loop: samples the exercise for its `mode`/`modeKey` (clock from `clockStart`/`pausedAt` or its own), crossfades on any change, fades between views, positions labels and writes the HUD (cue, countdown, progress, chewing side). The person can switch Corte/Frente.
+- `SwallowHome.jsx` (tab content: pending count, today's progress per exercise, "Comenzar sesión" listing what this session brings, 7-day log per exercise for the therapist), `Progress.jsx` (one box per daily time; dashed = optional part of a range), `SwallowPreview.jsx` (modal + "practice only this one"), `SwallowSession.jsx` (no-scroll session screen; 100 ms `TICK` while something runs, guide beeps, screen wake lock), `SwallowComplete.jsx`.
+
+### Head Lab (`src/dev/HeadLab.jsx`)
+Dev-only: `bun run dev` → `http://localhost:5173/strength-routine/?headlab`. Pick an exercise and mode (`demo | rep | work | idle | params`), freeze at a time, or drive every parameter with sliders. URL params (`ex`, `mode`, `t`, `dur`, `view`, `p=jaw:10,tPress:1`, `nohud`, `capture=1`) make it scriptable for screenshots.
+
+### Adding a swallowing exercise
+1. Add the poses it needs to `headPoses.js` (tune them in the Head Lab with `mode=params`); if a movement needs a new shape, add a morph target or parameter to `sideView.js`/`frontView.js`.
+2. Add the entry to `SWALLOW_EXERCISES` (`kind`, `views`, `idle`, and `rep` or `work`).
+3. Add a row to `SWALLOW_ROUTINE` with its dosage, `perDay` (and `minPerDay` for a range) and `short` name.
+
 ## Adding an exercise
+
+Strength program:
 
 1. Add the start/end poses to `poses.js` (use `d()` for degrees → radians; keep the joint key set; ankles at y ≈ 0.07). Tune them in the Pose Lab and paste the copied output.
 2. Add the entry to `EXERCISES` with `keyframes` (usually `[start, end, start]`), a `band` config matching one of the types above, and optionally `concentric`, `tempo`, `cues`, `works`, `camera`, `restPose`, `plantHands`/`handPath`.

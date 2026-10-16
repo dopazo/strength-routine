@@ -1,6 +1,9 @@
 # Rutina de Fuerza con Elásticos
 
-Strength-training routine app for **flat open resistance bands** (therapy bands — long flat strips, no handles). Designed to train the major muscle groups and help maintain endurance. UI is in Spanish.
+Exercise app with two programs (UI in Spanish), picked with the tabs on the start screen:
+
+- **Fuerza** — strength-training routine for **flat open resistance bands** (therapy bands — long flat strips, no handles). Designed to train the major muscle groups and help maintain endurance.
+- **Deglución** — swallowing-muscle exercises prescribed by a speech therapist: Mendelsohn and isometric tongue press twice a day, Masako 3–4 series a day, gum chewing once a day. Each time the app is opened, the session brings whatever is still pending today per the prescription. User-paced: the person taps when ready for each rep or set.
 
 Every exercise is rendered in 3D with an articulated mannequin animated in real time: quaternion interpolation, foot IK so feet stay planted, a training tempo (fast concentric, slow eccentric) synced to the routine's reps, and a flat band simulated with Verlet physics whose color shifts lime → red as it stretches.
 
@@ -8,6 +11,14 @@ Every exercise is rendered in 3D with an articulated mannequin animated in real 
   <img src="docs/start-screen.png" alt="Routine overview" width="320" />
   &nbsp;
   <img src="docs/workout-screen.png" alt="Workout view with 3D viewer" width="320" />
+</p>
+
+The swallowing exercises are shown on animated head plates drawn in SVG: a **sagittal cut** (tongue, palate, soft palate, epiglottis, hyoid, larynx and a saliva bolus travelling to the esophagus) and a **front view** (what the person sees in the mirror: mouth, tongue, Adam's apple, a hand on the throat, masseters and an x-ray view of the gum between the molars). Both are driven by the same pose parameters (jaw, tongue shapes, larynx elevation…), so they stay in sync and the person can switch between them. A 7-day log on the device records each exercise against its daily frequency, plus Masako repetitions, as the prescription asks.
+
+<p>
+  <img src="docs/swallow-start.png" alt="Swallowing program overview" width="320" />
+  &nbsp;
+  <img src="docs/swallow-session.png" alt="Swallowing session with the sagittal head plate" width="320" />
 </p>
 
 ## Stack
@@ -33,13 +44,24 @@ src/
 ├── data/
 │   ├── poses.js         # poses as flat dicts of joint angles (radians)
 │   ├── exercises.js     # exercises: keyframes, tempo, cues, camera, band config
-│   └── routine.js       # ordered routine (sets, work, rest, reps, phase)
+│   ├── routine.js       # ordered routine (sets, work, rest, reps, phase)
+│   ├── swallowExercises.js  # swallowing exercises: text, kind, views, animation timelines
+│   └── swallowRoutine.js    # swallowing prescription (sets, reps/seconds, times per day)
 ├── animation/
 │   ├── easing.js        # cubic-bezier easings (concentric / eccentric)
 │   ├── tempo.js         # rep plan: tempo scaled so reps fill the work time
 │   └── director.js      # workout phase + elapsed time → poses to show + HUD
 ├── state/
-│   └── workoutReducer.js  # state machine work → rest → … → complete
+│   ├── workoutReducer.js  # state machine work → rest → … → complete
+│   └── swallowReducer.js  # user-paced swallowing session (intro → reps/sets → next)
+├── swallow/
+│   ├── shapes.js        # Catmull-Rom paths and 2D helpers
+│   ├── sideView.js      # sagittal head & neck: geometry, skinning weights, morph targets
+│   ├── frontView.js     # front face: mouth, tongue, Adam's apple, masseters, x-ray gum
+│   ├── views.js         # view registry + anatomy labels
+│   ├── headPoses.js     # named poses (dicts of parameters)
+│   ├── motion.js        # timelines, procedural chewing, per-mode sampling
+│   └── log.js           # daily log in localStorage
 ├── three/
 │   ├── skeleton.js      # mannequin construction (joints, meshes, colliders)
 │   ├── rig.js           # quaternion poses, slerp blending, two-bone IK
@@ -51,9 +73,12 @@ src/
 │   ├── WorkoutScreen.jsx
 │   ├── CompleteScreen.jsx
 │   ├── ExerciseViewer.jsx  # React wrapper of the 3D scene + rep HUD
-│   └── viewerLoader.js  # lazy-loads the viewer (Three.js) in a separate chunk
+│   ├── viewerLoader.js  # lazy-loads the viewer (Three.js) in a separate chunk
+│   ├── PreviewModal.jsx # floating preview frame shared by both programs
+│   └── swallow/         # head plates (HeadSvg, HeadViewer) and swallowing screens
 ├── dev/
-│   └── PoseLab.jsx      # dev-only pose editor (`bun run dev` → `?lab`)
+│   ├── PoseLab.jsx      # dev-only pose editor (`bun run dev` → `?lab`)
+│   └── HeadLab.jsx      # dev-only head-plate lab (`bun run dev` → `?headlab`)
 ├── App.jsx              # routing via reducer flags + 100ms tick
 └── main.jsx
 ```
