@@ -5,7 +5,7 @@ import { ExercisePreview } from './ExercisePreview.jsx';
 import { RowChevron } from './PreviewModal.jsx';
 import { SwallowHome } from './swallow/SwallowHome.jsx';
 import { useTheme } from '../theme.js';
-import { Badge, Hero, HeroStats, SectionTitle } from './ui.jsx';
+import { Hero, HeroStats, SectionTitle } from './ui.jsx';
 
 const PROGRAMS = [
   { id: 'fuerza', label: 'Fuerza' },
@@ -63,7 +63,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="btn-soft mt-8 w-full py-3 flex items-center justify-center gap-2 text-ink-2 text-[16px] font-medium"
+      className="mt-8 mx-auto flex items-center justify-center gap-2 px-3 py-2 text-ink-2 text-[16px] font-medium underline-offset-4 hover:underline hover:text-ink"
     >
       <ThemeIcon dark={dark} />
       {dark ? 'Usar colores claros' : 'Usar modo oscuro'}
@@ -120,11 +120,14 @@ function StrengthHome({ onStart }) {
       </Hero>
 
       <SectionTitle title="Los ejercicios" hint="Toca uno para ver cómo se hace." />
-      <div className="space-y-5">
+      <div className="space-y-4">
         {groups.map(({ phase, items }, g) => (
           <section key={phase} className="rise" style={{ '--i': g }}>
-            <h3 className="text-[16px] font-bold text-ink-2 px-1 mb-2">{phase}</h3>
-            <ul className="card overflow-hidden">
+            <h3 className="flex items-center gap-3 text-[15px] font-bold text-blaze px-1">
+              {phase}
+              <span className="flex-1 h-px bg-line-soft" aria-hidden="true" />
+            </h3>
+            <ul>
               {items.map((item) => {
                 const ex = EXERCISES[item.exerciseId];
                 return (
@@ -132,10 +135,12 @@ function StrengthHome({ onStart }) {
                     <button
                       type="button"
                       onClick={() => setPreview(item)}
-                      className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
+                      className="w-full flex items-center gap-3 px-1 py-3 text-left rounded-lg hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
                       aria-label={`Ver cómo se hace: ${ex.name}`}
                     >
-                      <Badge>{item.dorsal}</Badge>
+                      <span className="w-8 shrink-0 font-display font-semibold text-[26px] leading-none text-ink-3 tabular-nums">
+                        {String(item.dorsal).padStart(2, '0')}
+                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="text-[18px] font-semibold leading-tight">{ex.name}</div>
                         <div className="text-[15px] text-ink-2 mt-0.5 leading-snug">

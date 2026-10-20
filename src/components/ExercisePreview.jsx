@@ -33,13 +33,13 @@ export function ExercisePreview({ item, onClose }) {
 
       <div className="px-5 pt-3 pb-5 overflow-y-auto">
         <p className="text-[17px] text-ink leading-snug">{ex.instructions}</p>
-        <div className="grid grid-cols-3 gap-2 mt-3">
+        <div className="grid grid-cols-3 mt-3 pt-3 border-t border-line-soft">
           {[
             ['Series', `${item.sets} × ${item.workSec} s`],
             ['Repeticiones', String(item.reps).replace('-', '–')],
             ['Descanso', `${item.restSec} s`],
-          ].map(([label, value]) => (
-            <div key={label} className="px-3 py-2 rounded-xl bg-paper-2 border border-line-soft">
+          ].map(([label, value], i) => (
+            <div key={label} className={i ? 'pl-3 border-l border-line-soft' : ''}>
               <div className="text-[14px] text-ink-2">{label}</div>
               <div className="font-display font-semibold text-[21px] tabular-nums leading-tight mt-0.5">{value}</div>
             </div>

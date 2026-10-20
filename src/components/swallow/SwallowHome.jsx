@@ -30,8 +30,8 @@ function WeekLog() {
   const cell = 'flex flex-col items-center justify-center gap-1 h-9 tabular-nums';
   const label = 'flex flex-col justify-center h-9 text-[14px] font-medium text-ink leading-tight';
   return (
-    <details className="group card overflow-hidden mt-8 rise" style={{ '--i': 2 }}>
-      <summary className="flex items-center justify-between gap-3 px-4 py-3.5 cursor-pointer list-none select-none hover:bg-paper-2/60">
+    <details className="group mt-8 border-y border-line-soft rise" style={{ '--i': 2 }}>
+      <summary className="flex items-center justify-between gap-3 px-1 py-3.5 cursor-pointer list-none select-none">
         <span>
           <span className="block text-[17px] font-semibold">Registro de la semana</span>
           <span className="block text-[15px] text-ink-2">Para mostrarle al fonoaudiólogo</span>
@@ -40,7 +40,7 @@ function WeekLog() {
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </summary>
-      <div className="grid grid-cols-[92px_repeat(7,1fr)] px-2 pb-2 pt-1 border-t border-line-soft">
+      <div className="grid grid-cols-[92px_repeat(7,1fr)] pb-2 pt-1">
         <span />
         {days.map((d, i) => (
           <span key={d.key} className={`flex flex-col items-center justify-center h-11 leading-none ${i === 6 ? 'text-ink font-bold' : 'text-ink-2'}`}>
@@ -92,7 +92,7 @@ function WeekLog() {
           );
         })}
       </div>
-      <p className="px-4 pb-3.5 text-[14px] text-ink-2 leading-snug">
+      <p className="px-1 pb-3.5 text-[14px] text-ink-2 leading-snug">
         Se guarda solo en este teléfono. Si masticaste chicle sin la app, toca el cuadro de hoy en «Chicle».
       </p>
     </details>
@@ -137,17 +137,17 @@ export function SwallowHome({ onStart }) {
       </Hero>
 
       <SectionTitle title="Hoy" hint="Toca un ejercicio para ver cómo se hace." />
-      <ul className="card overflow-hidden rise">
+      <ul className="rise border-t border-line-soft">
         {items.map((item) => {
           const ex = SWALLOW_EXERCISES[item.exerciseId];
           const n = timesToday(item, today);
           const met = isMet(item, today);
           return (
-            <li key={item.exerciseId} className="border-b border-line-soft last:border-b-0">
+            <li key={item.exerciseId} className="border-b border-line-soft">
               <button
                 type="button"
                 onClick={() => setPreview(item)}
-                className="w-full flex items-center gap-3 pl-4 pr-3 py-3 text-left hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
+                className="w-full flex items-center gap-3 px-1 py-3.5 text-left rounded-lg hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
                 aria-label={`Ver cómo se hace: ${ex.name}`}
               >
                 <div className="flex-1 min-w-0">

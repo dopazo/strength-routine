@@ -28,15 +28,15 @@ export function CompleteScreen({ totalElapsed, onRestart, onHome }) {
               {formatTime(totalElapsed)}
             </div>
         </div>
-        <div className="card mb-6">
+        <div className="mb-7 border-b border-line-soft">
           <div className="grid grid-cols-2">
-            <div className="p-4 border-r border-line-soft">
+            <div className="px-1 py-3 border-r border-line-soft">
               <div className="text-[16px] text-ink-2">Ejercicios</div>
               <div className="font-display font-bold text-4xl tabular-nums mt-1.5 leading-none">
                 {ROUTINE.length}
               </div>
             </div>
-            <div className="p-4">
+            <div className="pl-4 py-3">
               <div className="text-[16px] text-ink-2">Series</div>
               <div className="font-display font-bold text-4xl tabular-nums mt-1.5 leading-none">
                 {totalSets}

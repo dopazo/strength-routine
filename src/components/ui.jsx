@@ -64,15 +64,6 @@ export function SectionTitle({ title, hint }) {
   );
 }
 
-// Número de orden en una medalla redonda.
-export function Badge({ children }) {
-  return (
-    <span className="shrink-0 w-9 h-9 rounded-full bg-paper-2 border border-line-soft flex items-center justify-center font-display font-semibold text-[17px] text-ink-2 tabular-nums">
-      {children}
-    </span>
-  );
-}
-
 // Marca de "listo" que se dibuja sola (pantallas finales).
 export function DoneMark() {
   return (

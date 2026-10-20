@@ -32,8 +32,8 @@ export function SwallowComplete({ state, onHome }) {
               {formatTime(total)}
             </div>
         </div>
-        <div className="card mb-4">
-          <div className="px-4 py-3.5">
+        <div className="mb-4">
+          <div className="px-1 py-3">
             <div className="text-[16px] text-ink-2 mb-2">Cómo va el día</div>
             <ul className="space-y-2.5">
               {SWALLOW_ROUTINE.map((item) => {

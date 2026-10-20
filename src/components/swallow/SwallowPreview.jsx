@@ -39,7 +39,7 @@ export function SwallowPreview({ item, onClose, onPractice }) {
       <div className="px-5 pt-3 pb-5 overflow-y-auto">
         <p className="text-[17px] text-ink leading-snug">{ex.instructions}</p>
         {ex.tip && <p className="text-[16px] text-rest leading-snug mt-1.5">{ex.tip}</p>}
-        <div className="mt-3 rounded-xl bg-paper-2 border border-line-soft px-3.5 py-2.5">
+        <div className="mt-3 pt-3 border-t border-line-soft">
           <div className="text-[17px] font-semibold leading-snug">{item.note ?? `${dosage(item)}, ${perDayLabel(item)}.`}</div>
           <div className="text-[16px] text-ink-2 mt-1">Hoy: <strong className="text-ink">{todayLabel(item, day)}</strong></div>
         </div>

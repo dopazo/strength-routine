@@ -217,7 +217,7 @@ export function SwallowSession({ state, dispatch }) {
           <div className="flex items-center justify-between gap-3 mb-2">
             <button
               onClick={() => dispatch({ type: 'EXIT' })}
-              className="btn-soft rounded-full px-3.5 py-1 text-[16px] font-semibold"
+              className="text-[16px] font-semibold text-ink-2 hover:text-ink py-1 pr-2"
             >
               ‹ Salir
             </button>
