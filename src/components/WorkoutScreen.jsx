@@ -3,6 +3,7 @@ import { formatTime } from '../utils.js';
 import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES, TRANSITION_SEC } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { loadViewer } from './viewerLoader.js';
+import { ExerciseInfo } from './ui.jsx';
 
 // El visor 3D (y Three.js) va en un chunk aparte; ver viewerLoader.js.
 const ExerciseViewer = lazy(() => loadViewer().then((m) => ({ default: m.ExerciseViewer })));
@@ -91,9 +92,9 @@ export function WorkoutScreen({ state, dispatch }) {
   const sideBtn = 'btn-soft flex-1 py-2 flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none';
 
   return (
-    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-hidden">
+    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-y-auto">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 min-h-0">
-        <header className="px-4 pt-3 pb-2">
+        <header className="px-4 pt-3 pb-2 shrink-0">
           <div className="flex items-center justify-between gap-3 mb-2">
             <button
               onClick={() => dispatch({ type: 'TO_HOME' })}
@@ -123,7 +124,7 @@ export function WorkoutScreen({ state, dispatch }) {
           </div>
         </header>
 
-        <div className="px-4 pb-2 flex-1 min-h-[170px] flex flex-col">
+        <div className="px-4 pb-2 flex-1 min-h-[110px] flex flex-col">
           <div className="scope-dark vitrine relative flex-1 overflow-hidden rounded-[1.25rem]">
             <Suspense fallback={null}>
               <ExerciseViewer
@@ -141,14 +142,9 @@ export function WorkoutScreen({ state, dispatch }) {
           </div>
         </div>
 
-        <div className="px-4 py-1">
-          <h2 className="font-display font-semibold text-[26px] uppercase tracking-tight leading-none text-ink">
-            {exercise.name}
-          </h2>
-          <p className="text-[16px] text-ink-2 mt-1.5 leading-snug">{exercise.instructions}</p>
-        </div>
+        <ExerciseInfo key={current.exerciseId} name={exercise.name} text={exercise.instructions} />
 
-        <div className="px-4 py-1.5" aria-live="polite">
+        <div className="px-4 py-1 shrink-0" aria-live="polite">
           <div className="flex flex-col items-center">
             <span className={`inline-flex items-center gap-2 text-[17px] font-bold pl-3 pr-3.5 py-0.5 rounded-full border ${phaseStyle.pill}`}>
               <span className={`w-2.5 h-2.5 rounded-full ${phaseStyle.dot} ${state.isPaused ? '' : 'beat'}`} />
@@ -156,7 +152,7 @@ export function WorkoutScreen({ state, dispatch }) {
             </span>
             <div
               className="font-display font-bold tabular-nums text-ink mt-1"
-              style={{ fontSize: '72px', lineHeight: '0.9', letterSpacing: '-0.01em' }}
+              style={{ fontSize: 'clamp(48px, 9dvh, 72px)', lineHeight: '0.9', letterSpacing: '-0.01em' }}
             >
               {formatTime(state.timeRemaining)}
             </div>
@@ -166,7 +162,7 @@ export function WorkoutScreen({ state, dispatch }) {
           </div>
         </div>
 
-        <div className="px-4 pb-3 pt-1">
+        <div className="px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
           <div className="flex items-stretch gap-2">
             <button
               onClick={() => dispatch({ type: 'PREV' })}

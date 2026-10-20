@@ -8,6 +8,7 @@ import { playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from '../../audi
 import { formatTime } from '../../utils.js';
 import { LazyHeadViewer } from './headLoader.js';
 import { Loading } from './SwallowPreview.jsx';
+import { ExerciseInfo } from '../ui.jsx';
 
 const RELEASE_CUES = new Set(['SUELTA', 'RELAJA']);
 
@@ -211,9 +212,9 @@ export function SwallowSession({ state, dispatch }) {
   const sideBtn = 'btn-soft flex-1 py-2 flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none';
 
   return (
-    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-hidden">
+    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-y-auto">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 min-h-0">
-        <header className="px-4 pt-3 pb-2">
+        <header className="px-4 pt-3 pb-2 shrink-0">
           <div className="flex items-center justify-between gap-3 mb-2">
             <button
               onClick={() => dispatch({ type: 'EXIT' })}
@@ -237,7 +238,7 @@ export function SwallowSession({ state, dispatch }) {
           </div>
         </header>
 
-        <div className="px-4 pb-2 flex-1 min-h-[170px] flex flex-col">
+        <div className="px-4 pb-2 flex-1 min-h-[110px] flex flex-col">
           <div className="scope-dark vitrine relative flex-1 overflow-hidden rounded-[1.25rem]">
             <Suspense fallback={<Loading />}>
               <LazyHeadViewer
@@ -252,22 +253,16 @@ export function SwallowSession({ state, dispatch }) {
           </div>
         </div>
 
-        <div className="px-4 py-1">
-          <h2 className="font-display font-semibold text-[26px] uppercase tracking-tight leading-none text-ink">
-            {ex.name}
-          </h2>
-          <p className="text-[16px] text-ink-2 mt-1.5 leading-snug">{ex.instructions}</p>
-          {ex.tip && <p className="text-[15px] text-rest mt-1 leading-snug">{ex.tip}</p>}
-        </div>
+        <ExerciseInfo key={item.exerciseId} name={ex.name} text={ex.instructions} tip={ex.tip} />
 
-        <div className="px-4 py-1.5" aria-live="polite">
+        <div className="px-4 py-1 shrink-0" aria-live="polite">
           <div className="flex flex-col items-center">
             <span className={`text-[19px] font-bold uppercase tracking-[0.04em] text-center leading-tight ${status.tone}`}>
               {status.label}
             </span>
             <div
               className="font-display font-bold tabular-nums text-ink mt-1 uppercase"
-              style={{ fontSize: status.bigSmall ? '36px' : '60px', lineHeight: '0.95', letterSpacing: '-0.01em' }}
+              style={{ fontSize: status.bigSmall ? 'clamp(28px, 5dvh, 36px)' : 'clamp(44px, 8dvh, 60px)', lineHeight: '0.95', letterSpacing: '-0.01em' }}
             >
               {status.big}
             </div>
@@ -283,7 +278,7 @@ export function SwallowSession({ state, dispatch }) {
           </div>
         </div>
 
-        <div className="px-4 pb-3 pt-1">
+        <div className="px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0">
           <div className="flex items-stretch gap-2">
             <button
               onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
