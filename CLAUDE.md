@@ -11,6 +11,10 @@ Two programs, picked with the tabs on the start screen (the choice is remembered
 
 Spanish-language UI; user-facing copy stays in Spanish.
 
+Target users include older adults (≈60+) who may not see well and are not tech-savvy: keep text large (body ≥ 16px, nothing under 13px), high contrast, sentence-case labels in plain Spanish (no tiny mono/uppercase micro-labels or abbreviations like "REPS·"), buttons with text and not only icons, and as few elements on screen as possible.
+
+**Theme:** light by default; the person can switch to dark mode at the bottom of the start screen (`src/theme.js`, remembered in `localStorage` under `tema`, applied as the `theme-dark` class on `<html>`). Colors are the tokens in `src/index.css` (`paper`, `ink`, `ink-2`, `ink-3`, `line`, `blaze`, `work`, `rest`, `trans`); `.theme-dark` and `.scope-dark` redefine them. The 3D viewer and the swallowing plates always sit on a dark `bg-scope` box marked `scope-dark`, so their HUD keeps the dark palette. Text on a colored fill (`bg-blaze`, `bg-work`…) uses `text-paper`, which has enough contrast in both themes.
+
 ## Stack & commands
 
 Vite 6 + React 19 + Tailwind CSS v4 (`@tailwindcss/vite` plugin) + Three.js. Bun is the runtime/package manager.

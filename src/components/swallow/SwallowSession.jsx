@@ -6,16 +6,14 @@ import { sampleExercise } from '../../swallow/motion.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from '../../audio/beeps.js';
 import { formatTime } from '../../utils.js';
-import { ViewerCorners } from '../PreviewModal.jsx';
 import { LazyHeadViewer } from './headLoader.js';
 import { Loading } from './SwallowPreview.jsx';
 
-const pad2 = (n) => String(n).padStart(2, '0');
 const RELEASE_CUES = new Set(['SUELTA', 'RELAJA']);
 
 function PrevIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="15 18 9 12 15 6" />
     </svg>
   );
@@ -23,7 +21,7 @@ function PrevIcon() {
 
 function NextIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
       <polyline points="9 6 15 12 9 18" />
     </svg>
   );
@@ -87,50 +85,52 @@ function useBeeps(state, sample, elapsed, item) {
 
 // Texto del bloque central según la etapa.
 function statusOf(state, item, ex, sample, elapsed) {
-  const sets = item.sets > 1 ? `SERIE ${pad2(state.set)}/${pad2(item.sets)}` : '';
+  const sets = item.sets > 1 ? `Serie ${state.set} de ${item.sets}` : '';
   const join = (...parts) => parts.filter(Boolean).join(' · ');
   if (state.stage === 'intro') {
     return {
       label: 'Cuando estés listo', tone: 'text-ink-2', big: dosage(item), bigSmall: true,
-      small: ex.kind === 'reps' ? join(item.sets > 1 ? `${item.sets} SERIES` : '', 'TOCA PARA CADA REPETICIÓN') : 'TOCA COMENZAR',
+      small: ex.kind === 'reps'
+        ? join(item.sets > 1 ? `${item.sets} series` : '', 'Toca el botón para cada repetición')
+        : 'Toca «Comenzar»',
     };
   }
   if (state.stage === 'ready') {
     return {
-      label: state.rep === 0 ? 'Cuando estés listo' : 'Descansa · a tu ritmo', tone: 'text-rest',
-      big: `${pad2(state.rep)}/${pad2(item.reps)}`, small: join(sets, 'REPETICIONES'),
+      label: state.rep === 0 ? 'Cuando estés listo' : 'Descansa, a tu ritmo', tone: 'text-rest',
+      big: `${state.rep} de ${item.reps}`, small: join(sets, 'Repeticiones hechas'),
     };
   }
   if (state.stage === 'rep') {
     const holding = sample?.countdown != null;
     return {
       label: sample?.cue || '…', tone: sample?.effort ? 'text-work' : 'text-ink-2',
-      big: holding ? String(Math.max(1, Math.ceil(sample.countdown - 0.05))) : `${pad2(state.rep + 1)}/${pad2(item.reps)}`,
-      small: join(sets, holding ? 'SEGUNDOS ARRIBA' : 'REPETICIÓN EN CURSO'),
+      big: holding ? String(Math.max(1, Math.ceil(sample.countdown - 0.05))) : `${state.rep + 1} de ${item.reps}`,
+      small: join(sets, holding ? 'Segundos que faltan' : 'Repetición en curso'),
     };
   }
   if (state.stage === 'rest') {
     return {
-      label: 'Descansa · a tu ritmo', tone: 'text-rest',
-      big: `${pad2(state.set)}/${pad2(item.sets)}`, small: 'PRÓXIMA SERIE · TOCA CUANDO ESTÉS LISTO',
+      label: 'Descansa, a tu ritmo', tone: 'text-rest',
+      big: `${state.set} de ${item.sets}`, small: 'Series hechas · toca cuando estés listo',
     };
   }
   if (state.stage === 'work') {
     const paused = state.pausedAt != null;
     if (item.maxSec) {
       const reached = elapsed >= item.workSec;
-      const side = sample?.side > 0 ? 'LADO DERECHO' : sample?.side < 0 ? 'LADO IZQUIERDO' : '';
+      const side = sample?.side > 0 ? 'lado derecho' : sample?.side < 0 ? 'lado izquierdo' : '';
       return {
         label: paused ? 'En pausa' : reached ? 'Mínimo cumplido · sigue si puedes' : join(sample?.cue === 'CAMBIA DE LADO' ? 'Cambia de lado' : 'Mastica', side),
         tone: paused ? 'text-ink-2' : 'text-work',
         big: formatTime(elapsed),
-        small: `MÍN ${formatTime(item.workSec)} · MÁX ${formatTime(item.maxSec)}`,
+        small: `Mínimo ${Math.round(item.workSec / 60)} min · máximo ${Math.round(item.maxSec / 60)} min`,
         meter: { value: elapsed / item.maxSec, mark: item.workSec / item.maxSec },
       };
     }
     return {
       label: paused ? 'En pausa' : sample?.cue || '', tone: paused ? 'text-ink-2' : 'text-work',
-      big: formatTime(Math.max(0, item.workSec - elapsed)), small: join(sets, `${item.workSec}S`),
+      big: formatTime(Math.max(0, item.workSec - elapsed)), small: join(sets, `${item.workSec} segundos`),
     };
   }
   return { label: '', big: '', small: '' };
@@ -200,33 +200,34 @@ export function SwallowSession({ state, dispatch }) {
 
   // Cuántas veces va hoy este ejercicio, según la pauta.
   const footer = item.maxSec
-    ? (day.chewDone ? 'HOY · LISTO' : 'UNA VEZ AL DÍA')
-    : `HOY · ${timesToday(item, day)}/${item.perDay}`;
+    ? (day.chewDone ? 'Hoy: listo' : 'Una vez al día')
+    : `Hoy: ${timesToday(item, day)} de ${item.perDay}`;
 
   const primaryClass = {
-    blaze: 'bg-blaze text-ink hover:bg-[#f06028]',
-    ink: 'bg-ink text-paper hover:bg-[#d8d2c2]',
-    outline: 'border border-ink/50 text-ink hover:bg-paper-2',
+    blaze: 'bg-blaze text-paper hover:brightness-110',
+    ink: 'bg-ink text-paper hover:opacity-90',
+    outline: 'border-2 border-ink text-ink hover:bg-paper-2',
   }[primary.style];
+  const sideBtn = 'flex-1 py-2 border-2 border-ink text-ink hover:bg-paper-2 transition-colors flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none disabled:opacity-30';
 
   return (
     <div className="h-[100dvh] bg-paper text-ink flex flex-col font-sans overflow-hidden">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 min-h-0">
-        <header className="px-5 pt-3 pb-2">
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="flex items-baseline gap-2 min-w-0">
-              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Deglución</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink truncate">
-                {state.full ? 'Sesión' : 'Práctica'}
-              </span>
-            </div>
-            <span className="font-display font-semibold text-ink text-base leading-none tabular-nums">
-              {pad2(state.idx + 1)}/{pad2(state.items.length)}
+        <header className="px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <button
+              onClick={() => dispatch({ type: 'EXIT' })}
+              className="text-[16px] font-semibold text-ink-2 hover:text-ink py-1 pr-2"
+            >
+              ‹ Salir
+            </button>
+            <span className="text-[16px] font-semibold tabular-nums">
+              {state.items.length > 1 ? `Ejercicio ${state.idx + 1} de ${state.items.length}` : 'Práctica'}
             </span>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1" aria-hidden="true">
             {state.items.map((it, i) => (
-              <div key={it.exerciseId} className="relative h-[3px] flex-1 bg-line overflow-hidden">
+              <div key={it.exerciseId} className="relative h-[6px] flex-1 bg-paper-2 border border-line overflow-hidden">
                 <div
                   className="absolute inset-y-0 left-0 bg-blaze transition-[width] duration-200"
                   style={{ width: `${(i < state.idx ? 1 : i === state.idx ? within : 0) * 100}%` }}
@@ -236,8 +237,8 @@ export function SwallowSession({ state, dispatch }) {
           </div>
         </header>
 
-        <div className="px-5 pb-2 flex-1 min-h-[190px] flex flex-col">
-          <div className="relative flex-1 bg-scope border border-ink overflow-hidden">
+        <div className="px-4 pb-2 flex-1 min-h-[170px] flex flex-col">
+          <div className="scope-dark relative flex-1 bg-scope border-2 border-ink overflow-hidden">
             <Suspense fallback={<Loading />}>
               <LazyHeadViewer
                 exerciseId={item.exerciseId}
@@ -246,91 +247,80 @@ export function SwallowSession({ state, dispatch }) {
                 clockStart={viewer.clockStart ?? null}
                 pausedAt={viewer.pausedAt ?? null}
                 duration={viewer.duration ?? 0}
-                label="Lámina"
               />
             </Suspense>
-            <ViewerCorners />
           </div>
         </div>
 
-        <div className="px-5 py-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-display font-semibold text-[22px] uppercase tracking-tight leading-none text-ink truncate">
-              {ex.name}
-            </h2>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3 whitespace-nowrap">
-              {dosage(item)}
-            </span>
-          </div>
-          <p className="text-[13px] text-ink-2 mt-1.5 leading-snug">{ex.instructions}</p>
-          {ex.tip && <p className="text-[12px] text-rest mt-1 leading-snug">{ex.tip}</p>}
+        <div className="px-4 py-1">
+          <h2 className="font-display font-semibold text-[26px] uppercase tracking-tight leading-none text-ink">
+            {ex.name}
+          </h2>
+          <p className="text-[16px] text-ink-2 mt-1.5 leading-snug">{ex.instructions}</p>
+          {ex.tip && <p className="text-[15px] text-rest mt-1 leading-snug">{ex.tip}</p>}
         </div>
 
-        <div className="px-5 py-1.5" aria-live="polite">
+        <div className="px-4 py-1.5" aria-live="polite">
           <div className="flex flex-col items-center">
-            <span className={`font-mono text-[10px] font-medium uppercase tracking-[0.3em] text-center ${status.tone}`}>
+            <span className={`text-[19px] font-bold uppercase tracking-[0.04em] text-center leading-tight ${status.tone}`}>
               {status.label}
             </span>
             <div
               className="font-display font-bold tabular-nums text-ink mt-1 uppercase"
-              style={{ fontSize: status.bigSmall ? '44px' : '64px', lineHeight: '0.9', letterSpacing: '-0.01em' }}
+              style={{ fontSize: status.bigSmall ? '36px' : '60px', lineHeight: '0.95', letterSpacing: '-0.01em' }}
             >
               {status.big}
             </div>
             {status.meter && (
-              <div className="relative w-48 h-[3px] bg-line mt-2">
+              <div className="relative w-56 h-[8px] bg-paper-2 border border-line mt-2">
                 <div className="absolute inset-y-0 left-0 bg-work" style={{ width: `${Math.min(1, status.meter.value) * 100}%` }} />
-                <div className="absolute top-[-3px] bottom-[-3px] w-px bg-ink" style={{ left: `${status.meter.mark * 100}%` }} />
+                <div className="absolute top-[-4px] bottom-[-4px] w-[2px] bg-ink" style={{ left: `${status.meter.mark * 100}%` }} />
               </div>
             )}
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3 mt-1.5 tabular-nums text-center">
+            <div className="text-[16px] font-medium text-ink-2 mt-1 tabular-nums text-center leading-snug">
               {status.small}
             </div>
           </div>
         </div>
 
-        <div className="px-5 pb-3 pt-2">
+        <div className="px-4 pb-3 pt-1">
           <div className="flex items-stretch gap-2">
             <button
               onClick={() => dispatch({ type: 'PREV_EXERCISE' })}
               disabled={!prev && state.stage === 'intro'}
-              className="flex-1 py-2.5 border border-ink/40 text-ink hover:bg-paper-2 transition-colors flex items-center justify-center disabled:opacity-30"
+              className={sideBtn}
               aria-label={prev ? `Volver a ${SWALLOW_EXERCISES[prev.exerciseId].name}` : 'Reiniciar este ejercicio'}
             >
               <PrevIcon />
+              Atrás
             </button>
             <button
               onClick={() => dispatch({ type: primary.action })}
-              className={`flex-[2.4] py-3.5 font-display font-semibold uppercase flex items-center justify-center text-center leading-tight transition-colors ${
-                primary.label.length > 14 ? 'tracking-[0.08em] text-[14px]' : 'tracking-[0.18em] text-[15px]'
+              className={`flex-[2.4] py-4 font-display font-semibold uppercase flex items-center justify-center text-center leading-tight transition ${
+                primary.label.length > 14 ? 'tracking-[0.02em] text-[18px]' : 'tracking-[0.1em] text-[21px]'
               } ${primaryClass}`}
             >
               {primary.label}
             </button>
             <button
               onClick={() => dispatch({ type: 'NEXT_EXERCISE' })}
-              className="flex-1 py-2.5 border border-ink/40 text-ink hover:bg-paper-2 transition-colors flex items-center justify-center"
+              className={sideBtn}
               aria-label={next ? `Saltar a ${SWALLOW_EXERCISES[next.exerciseId].name}` : 'Terminar la sesión'}
             >
               <NextIcon />
+              Saltar
             </button>
           </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-line gap-3">
-            <button
-              onClick={() => dispatch({ type: 'EXIT' })}
-              className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-3 hover:text-ink whitespace-nowrap"
-            >
-              ‹‹ Inicio
-            </button>
+          <div className="flex items-center justify-center mt-1.5 min-h-[40px]">
             {canEndSet ? (
               <button
                 onClick={() => dispatch({ type: 'END_SET' })}
-                className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-2 hover:text-ink whitespace-nowrap"
+                className="px-3 py-2 text-[16px] font-semibold text-ink-2 hover:text-ink underline underline-offset-4"
               >
-                {endLabel} ››
+                {endLabel}
               </button>
             ) : (
-              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-3 tabular-nums truncate">{footer}</span>
+              <span className="text-[16px] text-ink-2 tabular-nums">{footer}</span>
             )}
           </div>
         </div>

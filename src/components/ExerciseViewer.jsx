@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createExerciseScene } from '../three/exerciseScene.js';
 
-const pad2 = (n) => String(n).padStart(2, '0');
-
 const CUE_COLOR = {
   effort: 'var(--color-work)',
   control: 'var(--color-ink-2)',
@@ -26,10 +24,10 @@ function createHudWriter(refs) {
     const showTop = kind === 'rep' || kind === 'preview';
     set('topVis', r.top, 'opacity', showTop ? '1' : '0');
     if (kind === 'rep') {
-      set('label', r.label, 'text', 'REP');
-      set('value', r.value, 'text', `${pad2(hud.rep)}/${pad2(hud.total ?? 0)}`);
+      set('label', r.label, 'text', 'Repetición');
+      set('value', r.value, 'text', `${hud.rep} de ${hud.total ?? 0}`);
     } else if (kind === 'preview') {
-      set('label', r.label, 'text', 'VISTA PREVIA');
+      set('label', r.label, 'text', 'Ahora viene');
       set('value', r.value, 'text', hud.name ?? '');
     }
     const cue = hud?.cue ?? '';
@@ -108,19 +106,19 @@ export function ExerciseViewer({
             className="absolute top-2 right-3 flex flex-col items-end max-w-[62%] transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
-            <span ref={ref('label')} className="font-mono text-[9px] tracking-[0.25em] text-ink/45 uppercase" />
+            <span ref={ref('label')} className="text-[14px] font-medium text-ink-2" />
             <span
               ref={ref('value')}
-              className="font-display font-semibold text-[17px] leading-none text-ink tabular-nums uppercase truncate max-w-full mt-0.5"
+              className="font-display font-semibold text-[24px] leading-none text-ink tabular-nums uppercase truncate max-w-full mt-0.5"
             />
           </div>
           <span
             ref={ref('cue')}
-            className="absolute left-3 bottom-[13px] font-mono text-[10px] font-medium tracking-[0.3em] uppercase"
+            className="absolute left-3 right-3 bottom-[14px] text-[18px] font-bold tracking-[0.06em] uppercase"
           />
           <div
             ref={ref('barWrap')}
-            className="absolute left-3 right-3 bottom-[7px] h-[3px] bg-ink/10 transition-opacity duration-300"
+            className="absolute left-3 right-3 bottom-[6px] h-[5px] bg-ink/20 transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
             <div ref={ref('bar')} className="h-full w-full origin-left" style={{ transform: 'scaleX(0)' }} />
