@@ -16,12 +16,25 @@
   --color-ink-2: #3A342A;
   --color-ink-3: #5C5547;
 
+  --color-surface: #FFFDF8;
+  --color-line-soft: #E2D9C7;
+
   --color-scope: #100F0C;
 
   --color-blaze: #C2441A;
   --color-work: #3D7414;
   --color-rest: #3B5E82;
   --color-trans: #94560A;
+}
+
+/* Elevación: sombras cálidas en capas (no grises), más marcadas en el tema
+   claro; en el oscuro casi no se ven, así que se apoyan en un borde fino. */
+:root {
+  --elev-1: 0 1px 2px rgb(60 40 20 / 0.06), 0 2px 6px rgb(60 40 20 / 0.06);
+  --elev-2: 0 1px 2px rgb(60 40 20 / 0.06), 0 6px 16px -4px rgb(60 40 20 / 0.12), 0 18px 36px -12px rgb(60 40 20 / 0.16);
+  --elev-cta: 0 2px 4px rgb(163 54 15 / 0.2), 0 10px 24px -6px rgb(194 68 26 / 0.45);
+  --elev-dark: 0 2px 6px rgb(16 15 12 / 0.18), 0 16px 40px -12px rgb(16 15 12 / 0.45);
+  --glow: rgb(232 80 31 / 0.10);
 }
 
 .theme-dark,
@@ -38,6 +51,76 @@
   --color-rest: #7B95B0;
   --color-trans: #E0A03A;
 }
+.theme-dark {
+  --color-surface: #29251E;
+  --color-line-soft: #3A342B;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --elev-2: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 28px -8px rgb(0 0 0 / 0.5);
+  --elev-cta: 0 8px 24px -8px rgb(232 80 31 / 0.5);
+  --elev-dark: 0 0 0 1px rgb(236 231 217 / 0.08), 0 16px 40px -12px rgb(0 0 0 / 0.6);
+  --glow: rgb(232 80 31 / 0.12);
+}
+
+/* Fondo de las pantallas: papel con un brillo cálido arriba. */
+@utility app-bg {
+  background:
+    radial-gradient(120% 60% at 50% -10%, var(--glow), transparent 60%),
+    var(--color-paper);
+}
+
+/* Tarjeta clara elevada. */
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line-soft);
+  border-radius: 1.25rem;
+  box-shadow: var(--elev-2);
+}
+
+/* Vitrina oscura (cabeceras y visores): el negro original como acento. */
+@utility vitrine {
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgb(232 80 31 / 0.16), transparent 60%),
+    linear-gradient(160deg, #24201A, var(--color-scope) 70%);
+  border-radius: 1.5rem;
+  box-shadow: var(--elev-dark), inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Botón principal: degradé del naranja con sombra de color y respuesta al
+   toque. Colores fijos (texto claro sobre naranja profundo) para que se lea
+   igual en ambos temas y dentro de las vitrinas oscuras. */
+@utility btn-primary {
+  background: linear-gradient(180deg, #D04A1C, #A3360F);
+  color: #FFF8EE;
+  border-radius: 1rem;
+  box-shadow: var(--elev-cta), inset 0 1px 0 rgb(255 255 255 / 0.18);
+  transition: transform 120ms ease, filter 150ms ease, box-shadow 150ms ease;
+  &:hover { filter: brightness(1.06); }
+  &:active { transform: scale(0.98); box-shadow: var(--elev-1); }
+}
+
+/* Botón secundario: tarjeta con borde. */
+@utility btn-soft {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow: var(--elev-1);
+  transition: transform 120ms ease, background-color 150ms ease;
+  &:hover { background: var(--color-paper-2); }
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.35; box-shadow: none; }
+}
+
+/* Botón oscuro (pausa). */
+@utility btn-ink {
+  background: linear-gradient(180deg, #2E2921, #15130F);
+  color: #F7F3EA;
+  border-radius: 1rem;
+  box-shadow: var(--elev-2), inset 0 1px 0 rgb(255 255 255 / 0.1);
+  transition: transform 120ms ease, filter 150ms ease;
+  &:hover { filter: brightness(1.15); }
+  &:active { transform: scale(0.98); }
+}
 
 html { color-scheme: light; }
 html.theme-dark { color-scheme: dark; }
@@ -51,6 +134,34 @@ html.theme-dark { color-scheme: dark; }
 }
 .preview-backdrop { animation: preview-fade 180ms ease-out; }
 .preview-panel { animation: preview-pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* Entrada escalonada de las listas (--i = posición). */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+}
+.rise { animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+
+/* Punto que late junto a la fase en curso. */
+@keyframes beat {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.6); opacity: 0.55; }
+}
+.beat { animation: beat 1.2s ease-in-out infinite; }
+
+/* Marca de "listo": el círculo y el check se dibujan. */
+@keyframes draw { from { stroke-dashoffset: var(--len); } }
+.draw { stroke-dasharray: var(--len); animation: draw 700ms cubic-bezier(0.6, 0, 0.2, 1) both; }
+
+/* Cinta elástica decorativa de las cabeceras: se tensa al aparecer. */
+@keyframes stretch-in { from { stroke-dashoffset: 1; } }
+.ribbon { stroke-dasharray: 1; animation: stretch-in 1.1s cubic-bezier(0.3, 0.7, 0.2, 1) 150ms both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .preview-backdrop, .preview-panel { animation: none; }
+  .preview-backdrop, .preview-panel, .rise, .beat, .draw, .ribbon { animation: none; }
+}
+
+/* En modo oscuro el botón de pausa se separa del fondo con un tono más claro. */
+.theme-dark .btn-ink {
+  background: linear-gradient(180deg, #48413A, #2F2A23);
+  box-shadow: var(--elev-2), inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px rgb(255 255 255 / 0.08);
 }

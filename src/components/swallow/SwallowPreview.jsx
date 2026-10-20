@@ -28,24 +28,24 @@ export function SwallowPreview({ item, onClose, onPractice }) {
 
   return (
     <PreviewModal title={ex.name} subtitle={ex.target} onClose={onClose}>
-      <div className="px-4">
-        <div className="scope-dark relative bg-scope border-2 border-ink overflow-hidden h-[42vh] min-h-[220px] max-h-[420px]">
+      <div className="px-3">
+        <div className="scope-dark vitrine relative overflow-hidden rounded-[1.25rem] h-[42vh] min-h-[220px] max-h-[420px]">
           <Suspense fallback={<Loading />}>
             <LazyHeadViewer exerciseId={item.exerciseId} mode="demo" modeKey={`preview-${item.exerciseId}`} label="Vista previa" />
           </Suspense>
         </div>
       </div>
 
-      <div className="px-4 pt-2.5 pb-4 overflow-y-auto">
+      <div className="px-5 pt-3 pb-5 overflow-y-auto">
         <p className="text-[17px] text-ink leading-snug">{ex.instructions}</p>
         {ex.tip && <p className="text-[16px] text-rest leading-snug mt-1.5">{ex.tip}</p>}
-        <div className="mt-3 border-2 border-line px-3 py-2">
+        <div className="mt-3 rounded-xl bg-paper-2 border border-line-soft px-3.5 py-2.5">
           <div className="text-[17px] font-semibold leading-snug">{item.note ?? `${dosage(item)}, ${perDayLabel(item)}.`}</div>
           <div className="text-[16px] text-ink-2 mt-1">Hoy: <strong className="text-ink">{todayLabel(item, day)}</strong></div>
         </div>
         <button
           onClick={onPractice}
-          className="w-full mt-3 border-2 border-ink hover:bg-paper-2 text-ink py-3.5 font-display font-semibold uppercase tracking-[0.06em] text-[18px] transition-colors"
+          className="btn-soft w-full mt-3 py-3.5 font-display font-semibold uppercase tracking-[0.06em] text-[18px]"
         >
           Practicar solo este ejercicio
         </button>

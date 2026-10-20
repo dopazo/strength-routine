@@ -3,6 +3,7 @@ import { SWALLOW_ROUTINE, isMet, sessionItems, timesToday } from '../../data/swa
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { formatTime } from '../../utils.js';
 import { Progress } from './Progress.jsx';
+import { DoneMark } from '../ui.jsx';
 
 // Pantalla final de la sesión de deglución: lo que se hizo y cómo va el día
 // según la pauta.
@@ -13,25 +14,26 @@ export function SwallowComplete({ state, onHome }) {
   const pending = sessionItems(day);
 
   return (
-    <div className="min-h-[100dvh] bg-paper text-ink flex flex-col items-center justify-center px-5 py-8 font-sans">
+    <div className="min-h-[100dvh] app-bg text-ink flex flex-col items-center justify-center px-5 py-8 font-sans">
       <div className="w-full max-w-md">
         <div className="text-center">
-          <span className="inline-block px-3 py-1 bg-work text-paper text-[18px] font-bold mb-5">
+          <DoneMark />
+          <span className="inline-block mt-4 px-3.5 py-1 rounded-full border border-work/40 bg-work/12 text-work text-[18px] font-bold mb-3">
             {state.full ? 'Sesión completada' : 'Práctica lista'}
           </span>
-          <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-none mb-7">
+          <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-none mb-6">
             Buen trabajo
           </h1>
         </div>
 
-        <div className="border-2 border-line mb-4">
-          <div className="px-4 pt-3 pb-4 border-b-2 border-line">
+        <div className="scope-dark vitrine text-ink px-5 pt-4 pb-5 mb-3">
             <div className="text-[16px] text-ink-2">Tiempo de la sesión</div>
             <div className="font-display font-bold tabular-nums leading-none mt-1.5 text-ink" style={{ fontSize: '64px', letterSpacing: '-0.02em' }}>
               {formatTime(total)}
             </div>
-          </div>
-          <div className="px-4 py-2.5">
+        </div>
+        <div className="card mb-4">
+          <div className="px-4 py-3.5">
             <div className="text-[16px] text-ink-2 mb-2">Cómo va el día</div>
             <ul className="space-y-2.5">
               {SWALLOW_ROUTINE.map((item) => {
@@ -70,7 +72,7 @@ export function SwallowComplete({ state, onHome }) {
 
         <button
           onClick={onHome}
-          className="w-full bg-blaze hover:brightness-110 text-paper py-5 font-display font-semibold uppercase tracking-[0.12em] text-[22px] transition"
+          className="btn-primary w-full py-[18px] font-display font-semibold uppercase tracking-[0.12em] text-[22px]"
         >
           Volver al inicio
         </button>

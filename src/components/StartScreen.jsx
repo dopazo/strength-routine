@@ -5,17 +5,24 @@ import { ExercisePreview } from './ExercisePreview.jsx';
 import { RowChevron } from './PreviewModal.jsx';
 import { SwallowHome } from './swallow/SwallowHome.jsx';
 import { useTheme } from '../theme.js';
+import { Badge, Hero, HeroStats, SectionTitle } from './ui.jsx';
 
 const PROGRAMS = [
   { id: 'fuerza', label: 'Fuerza' },
   { id: 'deglucion', label: 'Deglución' },
 ];
 
-// Selector de programa: rutina de fuerza o ejercicios de deglución.
+// Selector de programa: control segmentado con un indicador que se desliza.
 function ProgramTabs({ value, onChange }) {
+  const idx = Math.max(0, PROGRAMS.findIndex((p) => p.id === value));
   return (
-    <div role="tablist" aria-label="Programa" className="grid grid-cols-2 border-2 border-ink mb-6">
-      {PROGRAMS.map((p, i) => {
+    <div role="tablist" aria-label="Programa" className="relative grid grid-cols-2 p-1.5 mb-5 rounded-[1.1rem] bg-paper-2 border border-line-soft">
+      <div
+        className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-[0.8rem] bg-surface shadow-[var(--elev-2)] transition-transform duration-300 ease-[cubic-bezier(0.3,0.7,0.2,1)]"
+        style={{ transform: `translateX(${idx * 100}%)` }}
+        aria-hidden="true"
+      />
+      {PROGRAMS.map((p) => {
         const active = p.id === value;
         return (
           <button
@@ -24,9 +31,9 @@ function ProgramTabs({ value, onChange }) {
             role="tab"
             aria-selected={active}
             onClick={() => onChange(p.id)}
-            className={`py-3.5 font-display font-semibold text-[19px] uppercase tracking-[0.08em] transition-colors ${
-              i === 0 ? 'border-r-2 border-ink' : ''
-            } ${active ? 'bg-ink text-paper' : 'text-ink hover:bg-paper-2'}`}
+            className={`relative py-3 font-display font-semibold text-[19px] uppercase tracking-[0.08em] transition-colors ${
+              active ? 'text-ink' : 'text-ink-2 hover:text-ink'
+            }`}
           >
             {p.label}
           </button>
@@ -36,27 +43,42 @@ function ProgramTabs({ value, onChange }) {
   );
 }
 
+function ThemeIcon({ dark }) {
+  return dark ? (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" />
+      <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+    </svg>
+  ) : (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+    </svg>
+  );
+}
+
 function ThemeToggle() {
   const [theme, toggle] = useTheme();
+  const dark = theme === 'oscuro';
   return (
     <button
       type="button"
       onClick={toggle}
-      className="mt-8 w-full py-3 border-2 border-line text-ink-2 text-[16px] font-medium hover:bg-paper-2 transition-colors"
+      className="btn-soft mt-8 w-full py-3 flex items-center justify-center gap-2 text-ink-2 text-[16px] font-medium"
     >
-      {theme === 'oscuro' ? 'Usar colores claros' : 'Usar modo oscuro'}
+      <ThemeIcon dark={dark} />
+      {dark ? 'Usar colores claros' : 'Usar modo oscuro'}
     </button>
   );
 }
 
 export function StartScreen({ program, onProgram, onStart, onStartSwallow }) {
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col items-center px-4 py-6 font-sans">
+    <div className="min-h-screen app-bg text-ink flex flex-col items-center px-4 py-5 font-sans">
       <div className="w-full max-w-md">
         <ProgramTabs value={program} onChange={onProgram} />
         {program === 'deglucion'
-          ? <SwallowHome onStart={onStartSwallow} />
-          : <StrengthHome onStart={onStart} />}
+          ? <SwallowHome key="deglucion" onStart={onStartSwallow} />
+          : <StrengthHome key="fuerza" onStart={onStart} />}
         <ThemeToggle />
       </div>
     </div>
@@ -77,49 +99,43 @@ function StrengthHome({ onStart }) {
   });
 
   const minutes = Math.round(TOTAL_DURATION / 60);
+  const totalSets = ROUTINE.reduce((s, r) => s + r.sets, 0);
 
   return (
     <>
-      <h1 className="font-display font-bold text-[40px] uppercase tracking-tight leading-[0.95]">
-        Rutina de fuerza
-      </h1>
-      <p className="text-[18px] leading-snug text-ink-2 mt-3">
-        {ROUTINE.length} ejercicios con banda elástica para todo el cuerpo.
-        Dura unos <strong className="text-ink">{minutes} minutos</strong>. La app te guía paso a paso y te avisa con sonidos.
-      </p>
+      <Hero kicker="Banda elástica" title="Rutina de fuerza">
+        <p className="text-[17px] leading-snug text-ink-2 mt-3">
+          La app te guía paso a paso y te avisa con sonidos.
+        </p>
+        <HeroStats items={[[minutes, 'minutos'], [ROUTINE.length, 'ejercicios'], [totalSets, 'series']]} />
+        <button
+          onClick={onStart}
+          className="btn-primary w-full mt-4 py-[18px] font-display font-semibold uppercase tracking-[0.12em] text-[22px]"
+        >
+          Comenzar rutina
+        </button>
+        <p className="text-[15px] text-ink-2 text-center mt-3">
+          Necesitas una banda elástica plana y espacio para moverte.
+        </p>
+      </Hero>
 
-      <button
-        onClick={onStart}
-        className="w-full mt-5 bg-blaze hover:brightness-110 text-paper py-5 font-display font-semibold uppercase tracking-[0.12em] text-[22px] transition"
-      >
-        Comenzar rutina
-      </button>
-      <p className="text-[16px] text-ink-2 text-center mt-2.5">
-        Necesitas una banda elástica plana y espacio para moverte.
-      </p>
-
-      <h2 className="font-display font-semibold text-[24px] uppercase tracking-tight mt-8">Los ejercicios</h2>
-      <p className="text-[16px] text-ink-2 mt-1 mb-3">Toca uno para ver cómo se hace.</p>
+      <SectionTitle title="Los ejercicios" hint="Toca uno para ver cómo se hace." />
       <div className="space-y-5">
-        {groups.map(({ phase, items }) => (
-          <div key={phase}>
-            <div className="pb-1.5 border-b-2 border-ink">
-              <span className="text-[17px] font-bold text-ink">{phase}</span>
-            </div>
-            <ul>
+        {groups.map(({ phase, items }, g) => (
+          <section key={phase} className="rise" style={{ '--i': g }}>
+            <h3 className="text-[16px] font-bold text-ink-2 px-1 mb-2">{phase}</h3>
+            <ul className="card overflow-hidden">
               {items.map((item) => {
                 const ex = EXERCISES[item.exerciseId];
                 return (
-                  <li key={item.dorsal} className="border-b border-line last:border-b-0">
+                  <li key={item.dorsal} className="border-b border-line-soft last:border-b-0">
                     <button
                       type="button"
                       onClick={() => setPreview(item)}
-                      className="w-full flex items-center gap-3 py-3 text-left hover:bg-paper-2 active:bg-paper-2 transition-colors"
+                      className="w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
                       aria-label={`Ver cómo se hace: ${ex.name}`}
                     >
-                      <span className="text-[17px] font-semibold text-ink-3 tabular-nums w-6 text-right">
-                        {item.dorsal}
-                      </span>
+                      <Badge>{item.dorsal}</Badge>
                       <div className="flex-1 min-w-0">
                         <div className="text-[18px] font-semibold leading-tight">{ex.name}</div>
                         <div className="text-[15px] text-ink-2 mt-0.5 leading-snug">
@@ -132,7 +148,7 @@ function StrengthHome({ onStart }) {
                 );
               })}
             </ul>
-          </div>
+          </section>
         ))}
       </div>
       {preview && <ExercisePreview item={preview} onClose={closePreview} />}

@@ -204,20 +204,20 @@ export function SwallowSession({ state, dispatch }) {
     : `Hoy: ${timesToday(item, day)} de ${item.perDay}`;
 
   const primaryClass = {
-    blaze: 'bg-blaze text-paper hover:brightness-110',
-    ink: 'bg-ink text-paper hover:opacity-90',
-    outline: 'border-2 border-ink text-ink hover:bg-paper-2',
+    blaze: 'btn-primary',
+    ink: 'btn-ink',
+    outline: 'btn-soft',
   }[primary.style];
-  const sideBtn = 'flex-1 py-2 border-2 border-ink text-ink hover:bg-paper-2 transition-colors flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none disabled:opacity-30';
+  const sideBtn = 'btn-soft flex-1 py-2 flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none';
 
   return (
-    <div className="h-[100dvh] bg-paper text-ink flex flex-col font-sans overflow-hidden">
+    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-hidden">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 min-h-0">
         <header className="px-4 pt-3 pb-2">
           <div className="flex items-center justify-between gap-3 mb-2">
             <button
               onClick={() => dispatch({ type: 'EXIT' })}
-              className="text-[16px] font-semibold text-ink-2 hover:text-ink py-1 pr-2"
+              className="btn-soft rounded-full px-3.5 py-1 text-[16px] font-semibold"
             >
               ‹ Salir
             </button>
@@ -227,9 +227,9 @@ export function SwallowSession({ state, dispatch }) {
           </div>
           <div className="flex gap-1" aria-hidden="true">
             {state.items.map((it, i) => (
-              <div key={it.exerciseId} className="relative h-[6px] flex-1 bg-paper-2 border border-line overflow-hidden">
+              <div key={it.exerciseId} className="relative h-2 flex-1 rounded-full bg-paper-2 border border-line-soft overflow-hidden">
                 <div
-                  className="absolute inset-y-0 left-0 bg-blaze transition-[width] duration-200"
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#E0A03A] to-blaze transition-[width] duration-200"
                   style={{ width: `${(i < state.idx ? 1 : i === state.idx ? within : 0) * 100}%` }}
                 />
               </div>
@@ -238,7 +238,7 @@ export function SwallowSession({ state, dispatch }) {
         </header>
 
         <div className="px-4 pb-2 flex-1 min-h-[170px] flex flex-col">
-          <div className="scope-dark relative flex-1 bg-scope border-2 border-ink overflow-hidden">
+          <div className="scope-dark vitrine relative flex-1 overflow-hidden rounded-[1.25rem]">
             <Suspense fallback={<Loading />}>
               <LazyHeadViewer
                 exerciseId={item.exerciseId}
@@ -272,8 +272,8 @@ export function SwallowSession({ state, dispatch }) {
               {status.big}
             </div>
             {status.meter && (
-              <div className="relative w-56 h-[8px] bg-paper-2 border border-line mt-2">
-                <div className="absolute inset-y-0 left-0 bg-work" style={{ width: `${Math.min(1, status.meter.value) * 100}%` }} />
+              <div className="relative w-56 h-2 rounded-full bg-paper-2 border border-line-soft mt-2">
+                <div className="absolute inset-y-0 left-0 rounded-full bg-work" style={{ width: `${Math.min(1, status.meter.value) * 100}%` }} />
                 <div className="absolute top-[-4px] bottom-[-4px] w-[2px] bg-ink" style={{ left: `${status.meter.mark * 100}%` }} />
               </div>
             )}
@@ -296,7 +296,7 @@ export function SwallowSession({ state, dispatch }) {
             </button>
             <button
               onClick={() => dispatch({ type: primary.action })}
-              className={`flex-[2.4] py-4 font-display font-semibold uppercase flex items-center justify-center text-center leading-tight transition ${
+              className={`flex-[2.4] py-4 font-display font-semibold uppercase flex items-center justify-center text-center leading-tight ${
                 primary.label.length > 14 ? 'tracking-[0.02em] text-[18px]' : 'tracking-[0.1em] text-[21px]'
               } ${primaryClass}`}
             >

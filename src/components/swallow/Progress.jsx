@@ -11,7 +11,7 @@ export function Progress({ item, n, size = 6, wrap = false }) {
           <span
             key={i}
             style={{ width: size, height: size }}
-            className={i < n ? 'bg-work' : `${size > 9 ? 'border-2' : 'border'} ${optional ? 'border-dashed border-ink-3' : 'border-line'}`}
+            className={`${optional && i >= n ? '' : size > 9 ? 'rounded-[4px]' : 'rounded-[2px]'} ${i < n ? 'bg-work' : `${size > 9 ? 'border-2' : 'border'} ${optional ? 'border-dashed border-ink-3' : 'border-line'}`}`}
           />
         );
       })}

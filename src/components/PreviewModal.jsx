@@ -40,7 +40,7 @@ export function PreviewModal({ title, subtitle, onClose, children }) {
 
   return (
     <div
-      className="preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6"
+      className="preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#100F0C]/60 backdrop-blur-[3px] px-3 py-5"
       onPointerDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
       onClick={(e) => {
         if (downOnBackdrop.current && e.target === e.currentTarget) onClose();
@@ -51,9 +51,9 @@ export function PreviewModal({ title, subtitle, onClose, children }) {
         role="dialog"
         aria-modal="true"
         aria-label={`Vista previa: ${title}`}
-        className="preview-panel w-full max-w-md max-h-full flex flex-col bg-paper border-2 border-ink text-ink font-sans shadow-2xl"
+        className="preview-panel w-full max-w-md max-h-full flex flex-col bg-surface rounded-[1.75rem] text-ink font-sans shadow-[0_24px_60px_-12px_rgb(0_0_0/0.45)] overflow-hidden"
       >
-        <div className="flex items-start gap-3 px-4 pt-3 pb-2">
+        <div className="flex items-start gap-3 px-5 pt-4 pb-3">
           <div className="flex-1 min-w-0">
             <h2 className="font-display font-semibold text-[24px] uppercase tracking-tight leading-tight">
               {title}
@@ -65,7 +65,7 @@ export function PreviewModal({ title, subtitle, onClose, children }) {
           <button
             ref={closeRef}
             onClick={onClose}
-            className="-mr-1 flex items-center gap-1 px-2 py-1.5 border-2 border-ink text-ink text-[16px] font-semibold hover:bg-paper-2 transition-colors"
+            className="btn-soft -mr-1 flex items-center gap-1 pl-2 pr-3 py-1.5 rounded-full text-[16px] font-semibold"
             aria-label="Cerrar vista previa"
           >
             <CloseIcon />

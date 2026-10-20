@@ -103,7 +103,7 @@ export function ExerciseViewer({
         <div className="pointer-events-none absolute inset-0">
           <div
             ref={ref('top')}
-            className="absolute top-2 right-3 flex flex-col items-end max-w-[62%] transition-opacity duration-300"
+            className="absolute top-3 right-4 flex flex-col items-end max-w-[62%] transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
             <span ref={ref('label')} className="text-[14px] font-medium text-ink-2" />
@@ -114,11 +114,11 @@ export function ExerciseViewer({
           </div>
           <span
             ref={ref('cue')}
-            className="absolute left-3 right-3 bottom-[14px] text-[18px] font-bold tracking-[0.06em] uppercase"
+            className="absolute left-4 right-4 bottom-[18px] text-[18px] font-bold tracking-[0.06em] uppercase"
           />
           <div
             ref={ref('barWrap')}
-            className="absolute left-3 right-3 bottom-[6px] h-[5px] bg-ink/20 transition-opacity duration-300"
+            className="absolute left-4 right-4 bottom-[10px] h-[5px] rounded-full overflow-hidden bg-ink/20 transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
             <div ref={ref('bar')} className="h-full w-full origin-left" style={{ transform: 'scaleX(0)' }} />

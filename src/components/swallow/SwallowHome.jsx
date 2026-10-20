@@ -7,6 +7,7 @@ import { getDay, lastDays, setChewDone, useSwallowLog } from '../../swallow/log.
 import { SwallowPreview } from './SwallowPreview.jsx';
 import { Progress } from './Progress.jsx';
 import { RowChevron } from '../PreviewModal.jsx';
+import { Hero, SectionTitle } from '../ui.jsx';
 
 // "a, b y c".
 const listJoin = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`);
@@ -29,8 +30,8 @@ function WeekLog() {
   const cell = 'flex flex-col items-center justify-center gap-1 h-9 tabular-nums';
   const label = 'flex flex-col justify-center h-9 text-[14px] font-medium text-ink leading-tight';
   return (
-    <details className="group border-2 border-line mt-7">
-      <summary className="flex items-center justify-between gap-3 px-3 py-3 cursor-pointer list-none select-none hover:bg-paper-2">
+    <details className="group card overflow-hidden mt-8 rise" style={{ '--i': 2 }}>
+      <summary className="flex items-center justify-between gap-3 px-4 py-3.5 cursor-pointer list-none select-none hover:bg-paper-2/60">
         <span>
           <span className="block text-[17px] font-semibold">Registro de la semana</span>
           <span className="block text-[15px] text-ink-2">Para mostrarle al fonoaudiólogo</span>
@@ -39,7 +40,7 @@ function WeekLog() {
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </summary>
-      <div className="grid grid-cols-[92px_repeat(7,1fr)] px-2 pb-2 pt-1 border-t-2 border-line">
+      <div className="grid grid-cols-[92px_repeat(7,1fr)] px-2 pb-2 pt-1 border-t border-line-soft">
         <span />
         {days.map((d, i) => (
           <span key={d.key} className={`flex flex-col items-center justify-center h-11 leading-none ${i === 6 ? 'text-ink font-bold' : 'text-ink-2'}`}>
@@ -64,7 +65,7 @@ function WeekLog() {
                       key={d.key}
                       type="button"
                       onClick={() => setChewDone(!d.chewDone)}
-                      className={`${cell} border-2 border-dashed border-line hover:bg-paper-2`}
+                      className={`${cell} rounded-lg border-2 border-dashed border-line hover:bg-paper-2`}
                       aria-label={d.chewDone ? 'Desmarcar la masticación de hoy' : 'Marcar la masticación de hoy como hecha'}
                       aria-pressed={d.chewDone}
                     >
@@ -91,7 +92,7 @@ function WeekLog() {
           );
         })}
       </div>
-      <p className="px-3 pb-3 text-[14px] text-ink-2 leading-snug">
+      <p className="px-4 pb-3.5 text-[14px] text-ink-2 leading-snug">
         Se guarda solo en este teléfono. Si masticaste chicle sin la app, toca el cuadro de hoy en «Chicle».
       </p>
     </details>
@@ -110,47 +111,43 @@ export function SwallowHome({ onStart }) {
 
   return (
     <>
-      <h1 className="font-display font-bold text-[40px] uppercase tracking-tight leading-[0.95]">
-        Rutina de deglución
-      </h1>
-      <p className="text-[18px] leading-snug text-ink-2 mt-3">
-        Ejercicios indicados por tu fonoaudiólogo. Cada vez que abras la app, haz una sesión:
-        trae solo lo que te falta hoy.
-      </p>
+      <Hero kicker="Fonoaudiología" title="Rutina de deglución">
+        <p className="text-[17px] leading-snug text-ink-2 mt-3">
+          Cada vez que abras la app, haz una sesión: trae solo lo que te falta hoy.
+        </p>
+        {pending.length > 0 ? (
+          <>
+            <button
+              onClick={() => onStart({ full: true })}
+              className="btn-primary w-full mt-4 py-[18px] font-display font-semibold uppercase tracking-[0.12em] text-[22px]"
+            >
+              Comenzar sesión
+            </button>
+            <p className="text-[15px] text-ink-2 text-center mt-3 leading-snug">
+              Esta sesión trae: <strong className="text-ink">{listJoin(pending.map((r) => r.short))}</strong>.
+              <br />Ten a mano un vaso de agua y un chicle.
+            </p>
+          </>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-work/50 bg-work/10 text-center px-3 py-4">
+            <div className="font-display font-semibold uppercase tracking-[0.08em] text-[22px] text-work">✓ Listo por hoy</div>
+            <div className="text-[16px] text-ink-2 mt-1">Hiciste todo lo de la pauta. Mañana se vuelve a empezar.</div>
+          </div>
+        )}
+      </Hero>
 
-      {pending.length > 0 ? (
-        <>
-          <button
-            onClick={() => onStart({ full: true })}
-            className="w-full mt-5 bg-blaze hover:brightness-110 text-paper py-5 font-display font-semibold uppercase tracking-[0.12em] text-[22px] transition"
-          >
-            Comenzar sesión
-          </button>
-          <p className="text-[16px] text-ink-2 text-center mt-2.5 leading-snug">
-            Esta sesión trae: <strong className="text-ink">{listJoin(pending.map((r) => r.short))}</strong>.
-            <br />Ten a mano un vaso de agua y un chicle.
-          </p>
-        </>
-      ) : (
-        <div className="mt-5 border-2 border-work text-center px-3 py-4">
-          <div className="font-display font-semibold uppercase tracking-[0.08em] text-[22px] text-work">Listo por hoy</div>
-          <div className="text-[16px] text-ink-2 mt-1">Hiciste todo lo de la pauta. Mañana se vuelve a empezar.</div>
-        </div>
-      )}
-
-      <h2 className="font-display font-semibold text-[24px] uppercase tracking-tight mt-8">Hoy</h2>
-      <p className="text-[16px] text-ink-2 mt-1 mb-2">Toca un ejercicio para ver cómo se hace.</p>
-      <ul className="border-t-2 border-ink">
+      <SectionTitle title="Hoy" hint="Toca un ejercicio para ver cómo se hace." />
+      <ul className="card overflow-hidden rise">
         {items.map((item) => {
           const ex = SWALLOW_EXERCISES[item.exerciseId];
           const n = timesToday(item, today);
           const met = isMet(item, today);
           return (
-            <li key={item.exerciseId} className="border-b border-line">
+            <li key={item.exerciseId} className="border-b border-line-soft last:border-b-0">
               <button
                 type="button"
                 onClick={() => setPreview(item)}
-                className="w-full flex items-center gap-3 py-3 text-left hover:bg-paper-2 active:bg-paper-2 transition-colors"
+                className="w-full flex items-center gap-3 pl-4 pr-3 py-3 text-left hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
                 aria-label={`Ver cómo se hace: ${ex.name}`}
               >
                 <div className="flex-1 min-w-0">

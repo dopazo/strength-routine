@@ -15,6 +15,8 @@ Target users include older adults (≈60+) who may not see well and are not tech
 
 **Theme:** light by default; the person can switch to dark mode at the bottom of the start screen (`src/theme.js`, remembered in `localStorage` under `tema`, applied as the `theme-dark` class on `<html>`). Colors are the tokens in `src/index.css` (`paper`, `ink`, `ink-2`, `ink-3`, `line`, `blaze`, `work`, `rest`, `trans`); `.theme-dark` and `.scope-dark` redefine them. The 3D viewer and the swallowing plates always sit on a dark `bg-scope` box marked `scope-dark`, so their HUD keeps the dark palette. Text on a colored fill (`bg-blaze`, `bg-work`…) uses `text-paper`, which has enough contrast in both themes.
 
+**Look:** light cards on warm paper, with the original black kept as an accent. Reusable pieces live in `src/index.css` as Tailwind `@utility` classes: `app-bg` (paper with a warm glow), `card` (raised light surface), `vitrine` (dark gradient box with a deep shadow: program headers, viewers, final time), `btn-primary` (orange gradient with a colored shadow; fixed colors so it reads in both themes), `btn-soft` (secondary), `btn-ink` (pause). Shadows are the `--elev-*` variables (warm in light mode, redefined for `.theme-dark`). `src/components/ui.jsx` has `Hero` (the dark header with the elastic-band ribbon lime → amber → orange), `HeroStats`, `SectionTitle`, `Badge` and `DoneMark`. Motion stays subtle and is disabled under `prefers-reduced-motion`: `rise` (staggered entrance, `--i`), `beat` (dot on the current phase), `draw` (final check mark), `ribbon`.
+
 ## Stack & commands
 
 Vite 6 + React 19 + Tailwind CSS v4 (`@tailwindcss/vite` plugin) + Three.js. Bun is the runtime/package manager.

@@ -8,9 +8,9 @@ import { loadViewer } from './viewerLoader.js';
 const ExerciseViewer = lazy(() => loadViewer().then((m) => ({ default: m.ExerciseViewer })));
 
 const PHASE_STYLE = {
-  work:       { bg: 'bg-work',  label: 'Ejercicio' },
-  rest:       { bg: 'bg-rest',  label: 'Descanso' },
-  transition: { bg: 'bg-trans', label: 'Cambio de ejercicio' },
+  work:       { pill: 'bg-work/12 text-work border-work/40',    dot: 'bg-work',  label: 'Ejercicio' },
+  rest:       { pill: 'bg-rest/12 text-rest border-rest/40',    dot: 'bg-rest',  label: 'Descanso' },
+  transition: { pill: 'bg-trans/12 text-trans border-trans/40', dot: 'bg-trans', label: 'Cambio de ejercicio' },
 };
 
 function PrevIcon() {
@@ -88,16 +88,16 @@ export function WorkoutScreen({ state, dispatch }) {
 
   const overallProgress = (state.totalElapsed / TOTAL_DURATION) * 100;
   const navBtn = 'flex-1 min-w-0 flex items-center gap-1 py-2 text-[15px] font-semibold text-ink-2 hover:text-ink disabled:opacity-30';
-  const sideBtn = 'flex-1 py-2 border-2 border-ink text-ink hover:bg-paper-2 transition-colors flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none';
+  const sideBtn = 'btn-soft flex-1 py-2 flex flex-col items-center justify-center gap-0.5 text-[14px] font-semibold leading-none';
 
   return (
-    <div className="h-[100dvh] bg-paper text-ink flex flex-col font-sans overflow-hidden">
+    <div className="h-[100dvh] app-bg text-ink flex flex-col font-sans overflow-hidden">
       <div className="w-full max-w-md mx-auto flex flex-col flex-1 min-h-0">
         <header className="px-4 pt-3 pb-2">
           <div className="flex items-center justify-between gap-3 mb-2">
             <button
               onClick={() => dispatch({ type: 'TO_HOME' })}
-              className="text-[16px] font-semibold text-ink-2 hover:text-ink py-1 pr-2"
+              className="btn-soft rounded-full px-3.5 py-1 text-[16px] font-semibold"
             >
               ‹ Salir
             </button>
@@ -105,9 +105,9 @@ export function WorkoutScreen({ state, dispatch }) {
               Ejercicio {state.exerciseIdx + 1} de {ROUTINE.length}
             </span>
           </div>
-          <div className="relative h-[6px] bg-paper-2 border border-line" aria-hidden="true">
+          <div className="relative h-2 rounded-full bg-paper-2 border border-line-soft overflow-hidden" aria-hidden="true">
             <div
-              className="absolute inset-y-0 left-0 bg-blaze transition-all duration-100 ease-linear"
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#E0A03A] to-blaze transition-all duration-100 ease-linear"
               style={{ width: `${overallProgress}%` }}
             />
             {EXERCISE_BOUNDARIES.map((left, i) => (
@@ -124,7 +124,7 @@ export function WorkoutScreen({ state, dispatch }) {
         </header>
 
         <div className="px-4 pb-2 flex-1 min-h-[170px] flex flex-col">
-          <div className="scope-dark relative flex-1 bg-scope border-2 border-ink overflow-hidden">
+          <div className="scope-dark vitrine relative flex-1 overflow-hidden rounded-[1.25rem]">
             <Suspense fallback={null}>
               <ExerciseViewer
                 exerciseId={current.exerciseId}
@@ -150,7 +150,8 @@ export function WorkoutScreen({ state, dispatch }) {
 
         <div className="px-4 py-1.5" aria-live="polite">
           <div className="flex flex-col items-center">
-            <span className={`text-[17px] font-bold px-3 py-0.5 text-paper ${phaseStyle.bg}`}>
+            <span className={`inline-flex items-center gap-2 text-[17px] font-bold pl-3 pr-3.5 py-0.5 rounded-full border ${phaseStyle.pill}`}>
+              <span className={`w-2.5 h-2.5 rounded-full ${phaseStyle.dot} ${state.isPaused ? '' : 'beat'}`} />
               {state.isPaused ? 'En pausa' : phaseStyle.label}
             </span>
             <div
@@ -177,8 +178,8 @@ export function WorkoutScreen({ state, dispatch }) {
             </button>
             <button
               onClick={() => dispatch({ type: 'TOGGLE_PAUSE' })}
-              className={`flex-[2] py-4 font-display font-semibold uppercase tracking-[0.1em] text-[21px] flex items-center justify-center gap-2.5 transition ${
-                state.isPaused ? 'bg-blaze text-paper hover:brightness-110' : 'bg-ink text-paper hover:opacity-90'
+              className={`flex-[2] py-4 font-display font-semibold uppercase tracking-[0.1em] text-[21px] flex items-center justify-center gap-2.5 ${
+                state.isPaused ? 'btn-primary' : 'btn-ink'
               }`}
             >
               {state.isPaused ? <><PlayIcon /> Seguir</> : <><PauseIcon /> Pausa</>}

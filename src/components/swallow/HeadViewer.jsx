@@ -221,19 +221,19 @@ export function HeadViewer({
       {showHud && (
         <div className="pointer-events-none absolute inset-0">
           {views.length === 1 && (
-            <div className="absolute top-2 left-3 text-[14px] font-medium text-ink-2">
+            <div className="absolute top-3 left-4 text-[14px] font-medium text-ink-2">
               {label ? `${label} · ` : ''}{VIEWS[view].label}
             </div>
           )}
           {views.length > 1 && (
-            <div className="pointer-events-auto absolute top-2 right-2 flex border-2 border-ink/60 bg-scope/80">
+            <div className="pointer-events-auto absolute top-2.5 right-2.5 flex p-1 rounded-full border border-white/15 bg-scope/75 backdrop-blur-sm">
               {views.map((v) => (
                 <button
                   key={v}
                   type="button"
                   onClick={() => setView(v)}
                   aria-pressed={v === view}
-                  className={`px-3 py-1.5 text-[15px] font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full text-[15px] font-semibold transition-colors ${
                     v === view ? 'bg-ink text-paper' : 'text-ink-2 hover:text-ink'
                   }`}
                 >
@@ -244,16 +244,16 @@ export function HeadViewer({
           )}
           <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-scope/90 to-transparent" />
           <div ref={ref('sides')} className="absolute inset-x-3 bottom-10 flex justify-between transition-opacity duration-300" style={{ opacity: 0 }}>
-            <span ref={ref('left')} className="text-[15px] font-bold px-2 py-0.5 border-2">Izquierda</span>
-            <span ref={ref('right')} className="text-[15px] font-bold px-2 py-0.5 border-2">Derecha</span>
+            <span ref={ref('left')} className="text-[15px] font-bold px-2.5 py-0.5 rounded-full border-2">Izquierda</span>
+            <span ref={ref('right')} className="text-[15px] font-bold px-2.5 py-0.5 rounded-full border-2">Derecha</span>
           </div>
           <span
             ref={ref('cue')}
-            className="absolute left-3 right-3 bottom-[14px] text-[18px] font-bold tracking-[0.06em] uppercase text-center"
+            className="absolute left-4 right-4 bottom-[18px] text-[18px] font-bold tracking-[0.06em] uppercase text-center"
           />
           <div
             ref={ref('barWrap')}
-            className="absolute left-3 right-3 bottom-[6px] h-[5px] bg-ink/20 transition-opacity duration-300"
+            className="absolute left-4 right-4 bottom-[10px] h-[5px] rounded-full overflow-hidden bg-ink/20 transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
             <div ref={ref('bar')} className="h-full w-full origin-left bg-ink-2" style={{ transform: 'scaleX(0)' }} />
