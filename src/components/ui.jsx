@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 // Cinta elástica decorativa (lima → ámbar → naranja, como la banda del visor
 // cuando se estira). Se "tensa" al aparecer.
@@ -72,5 +72,35 @@ export function DoneMark() {
       <circle className="draw" style={{ '--len': 214 }} cx="38" cy="38" r="34" stroke="currentColor" strokeWidth="5" strokeLinecap="round" transform="rotate(-90 38 38)" />
       <polyline className="draw" style={{ '--len': 48, animationDelay: '450ms' }} points="24 39 34 49 53 29" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+// Nombre e indicaciones del ejercicio en curso. En pantallas de sesión el
+// espacio es justo: el texto largo se muestra en 2 líneas y "Leer todo" lo
+// despliega (con desplazamiento propio si no cabe), sin empujar los botones
+// fuera de la pantalla. Usar con key={id} para que se pliegue al cambiar.
+export function ExerciseInfo({ name, text, tip = null }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length + (tip?.length ?? 0) > 90;
+  return (
+    <div className="px-4 py-1 shrink-0">
+      <h2 className="font-display font-semibold text-[24px] uppercase tracking-tight leading-[1.05] text-ink line-clamp-2">
+        {name}
+      </h2>
+      <div className={`mt-1 ${open ? 'max-h-[28dvh] overflow-y-auto overscroll-contain' : ''}`}>
+        <p className={`text-[16px] text-ink-2 leading-snug ${open || !long ? '' : 'line-clamp-2'}`}>{text}</p>
+        {tip && (open || !long) && <p className="text-[15px] text-rest mt-1 leading-snug">{tip}</p>}
+      </div>
+      {long && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="mt-0.5 py-1 text-[15px] font-semibold text-blaze underline underline-offset-4"
+        >
+          {open ? 'Leer menos' : 'Leer todo'}
+        </button>
+      )}
+    </div>
   );
 }

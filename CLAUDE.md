@@ -68,7 +68,7 @@ Lazy-loaded: `WorkoutScreen` imports it through `viewerLoader.js`, so Three.js l
 
 ### Screens (`src/components/`)
 `StartScreen` (program tabs + `StrengthHome` or `SwallowHome`), `WorkoutScreen`, `CompleteScreen`; routed by `App.jsx` via the reducer flags `isStarted`/`isComplete` (and the swallow reducer's `active`/`complete`, checked first). `WorkoutScreen` and `ExercisePreview` consume `ExerciseViewer`. Tapping an exercise on the start screen opens `ExercisePreview`, a floating modal (frame, backdrop, Escape and focus handling live in `PreviewModal.jsx`, shared with the swallowing preview) that mounts its own viewer in `demo` mode with `freeRun` (looped, orbitable) and disposes it on close; it closes with the X, a tap on the backdrop, or Escape.
-In mobile, entire screen with no scroll.
+In mobile, entire screen with no scroll. Session screens (`WorkoutScreen`, `SwallowSession`) keep header, status and controls `shrink-0` and let the viewer shrink (`flex-1 min-h-[110px]`); long instructions go through `ExerciseInfo` (`ui.jsx`: 2 lines + "Leer todo"), the timer size follows the screen height (`clamp(…dvh…)`), and the root is `overflow-y-auto` only as a fallback so nothing is ever unreachable on very short screens.
 
 ### Pose Lab (`src/dev/PoseLab.jsx`)
 Dev-only tool: `bun run dev` → `http://localhost:5173/strength-routine/?lab`. Plays any exercise (looped, frozen at a time, or in work/rest/transition mode), edits a pose with sliders and copies it in `poses.js` format. URL params (`ex`, `mode`, `t`, `pose`, `yaw`, `pitch`, `dist`, `ty`, `capture=1`) make it scriptable for screenshots. `main.jsx` only loads it when `import.meta.env.DEV`, so it is stripped from production builds.
