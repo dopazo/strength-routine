@@ -115,12 +115,12 @@ export function PoseLab() {
   );
 
   if (capture) {
-    return <div className="w-screen h-screen bg-scope">{viewer}</div>;
+    return <div className="scope-dark w-screen h-screen bg-scope">{viewer}</div>;
   }
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col md:flex-row">
-      <div className="h-[55vh] md:h-screen md:flex-1 bg-scope border-b md:border-b-0 md:border-r border-line">
+      <div className="scope-dark h-[55vh] md:h-screen md:flex-1 bg-scope border-b md:border-b-0 md:border-r border-line">
         {viewer}
       </div>
       <div className="md:w-[380px] p-4 space-y-4 overflow-y-auto md:h-screen">

@@ -1,31 +1,26 @@
 import React, { useEffect, useRef } from 'react';
 
-const pad2 = (n) => String(n).padStart(2, '0');
-
 function CloseIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
       <line x1="6" y1="6" x2="18" y2="18" />
       <line x1="18" y1="6" x2="6" y2="18" />
     </svg>
   );
 }
 
-// Esquinas tipo visor sobre una lámina o animación.
-export function ViewerCorners() {
+// Flecha "ver más" de las filas que abren una vista previa.
+export function RowChevron() {
   return (
-    <div className="pointer-events-none absolute inset-0">
-      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-ink/60" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-ink/60" />
-      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-ink/60" />
-      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-ink/60" />
-    </div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-ink-3" aria-hidden="true">
+      <polyline points="9 6 15 12 9 18" />
+    </svg>
   );
 }
 
 // Ventana flotante de vista previa (se usa para los ejercicios de fuerza y de
 // deglución). Se cierra con la X, tocando fuera del recuadro o con Escape.
-export function PreviewModal({ number, title, subtitle, onClose, children }) {
+export function PreviewModal({ title, subtitle, onClose, children }) {
   // Solo cierra si el toque empezó en el fondo: así, al arrastrar dentro del
   // visor y soltar fuera del recuadro, la vista previa no se cierra.
   const downOnBackdrop = useRef(false);
@@ -45,7 +40,7 @@ export function PreviewModal({ number, title, subtitle, onClose, children }) {
 
   return (
     <div
-      className="preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6"
+      className="preview-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#100F0C]/60 backdrop-blur-[3px] px-3 py-5"
       onPointerDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
       onClick={(e) => {
         if (downOnBackdrop.current && e.target === e.currentTarget) onClose();
@@ -56,27 +51,25 @@ export function PreviewModal({ number, title, subtitle, onClose, children }) {
         role="dialog"
         aria-modal="true"
         aria-label={`Vista previa: ${title}`}
-        className="preview-panel w-full max-w-md max-h-full flex flex-col bg-paper border border-ink text-ink font-sans shadow-2xl"
+        className="preview-panel w-full max-w-md max-h-full flex flex-col bg-surface rounded-[1.75rem] text-ink font-sans shadow-[0_24px_60px_-12px_rgb(0_0_0/0.45)] overflow-hidden"
       >
-        <div className="flex items-start gap-3 px-4 pt-3 pb-2">
-          <span className="font-display font-semibold text-[15px] text-ink-2 tabular-nums leading-[1.45]">
-            {pad2(number)}
-          </span>
+        <div className="flex items-start gap-3 px-5 pt-4 pb-3">
           <div className="flex-1 min-w-0">
-            <h2 className="font-display font-semibold text-[20px] uppercase tracking-tight leading-tight">
+            <h2 className="font-display font-semibold text-[24px] uppercase tracking-tight leading-tight">
               {title}
             </h2>
-            <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mt-1">
+            <div className="text-[16px] text-ink-2 mt-0.5 leading-snug">
               {subtitle}
             </div>
           </div>
           <button
             ref={closeRef}
             onClick={onClose}
-            className="-mr-1.5 -mt-0.5 p-1.5 text-ink-2 hover:text-ink transition-colors"
+            className="btn-soft -mr-1 flex items-center gap-1 pl-2 pr-3 py-1.5 rounded-full text-[16px] font-semibold"
             aria-label="Cerrar vista previa"
           >
             <CloseIcon />
+            Cerrar
           </button>
         </div>
         {children}

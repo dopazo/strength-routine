@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { EXERCISES } from '../data/exercises.js';
 import { loadViewer } from './viewerLoader.js';
-import { PreviewModal, ViewerCorners } from './PreviewModal.jsx';
+import { PreviewModal } from './PreviewModal.jsx';
 
 // El visor 3D (y Three.js) va en un chunk aparte; ver viewerLoader.js.
 const ExerciseViewer = lazy(() => loadViewer().then((m) => ({ default: m.ExerciseViewer })));
@@ -13,36 +13,35 @@ export function ExercisePreview({ item, onClose }) {
   const ex = EXERCISES[item.exerciseId];
 
   return (
-    <PreviewModal number={item.dorsal} title={ex.name} subtitle={ex.muscles} onClose={onClose}>
-      <div className="px-4">
-        <div className="relative bg-scope border border-ink overflow-hidden h-[52vh] min-h-[220px] max-h-[440px]">
+    <PreviewModal title={ex.name} subtitle={ex.muscles} onClose={onClose}>
+      <div className="px-3">
+        <div className="scope-dark vitrine relative overflow-hidden rounded-[1.25rem] h-[48vh] min-h-[220px] max-h-[440px]">
           <Suspense
             fallback={(
-              <div className="absolute inset-0 flex items-center justify-center font-mono text-[10px] tracking-[0.3em] text-ink-3 uppercase">
+              <div className="absolute inset-0 flex items-center justify-center text-[16px] text-ink-2">
                 Cargando…
               </div>
             )}
           >
             <ExerciseViewer exerciseId={item.exerciseId} phase="demo" phaseKey={`preview-${item.dorsal}`} freeRun />
           </Suspense>
-          <ViewerCorners />
-          <div className="pointer-events-none absolute top-2 left-3 font-mono text-[9px] tracking-[0.25em] text-ink/40">
-            VISTA PREVIA · ARRASTRA
+          <div className="pointer-events-none absolute top-3 left-4 text-[14px] text-ink-2">
+            Desliza el dedo para girar
           </div>
         </div>
       </div>
 
-      <div className="px-4 pt-2.5 pb-4 overflow-y-auto">
-        <p className="text-[13px] text-ink-2 leading-snug">{ex.instructions}</p>
-        <div className="grid grid-cols-3 mt-2.5 border border-line">
+      <div className="px-5 pt-3 pb-5 overflow-y-auto">
+        <p className="text-[17px] text-ink leading-snug">{ex.instructions}</p>
+        <div className="grid grid-cols-3 mt-3 pt-3 border-t border-line-soft">
           {[
-            ['Series', `${item.sets}×${item.workSec}s`],
-            ['Reps', item.reps],
-            ['Descanso', `${item.restSec}s`],
+            ['Series', `${item.sets} × ${item.workSec} s`],
+            ['Repeticiones', String(item.reps).replace('-', '–')],
+            ['Descanso', `${item.restSec} s`],
           ].map(([label, value], i) => (
-            <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? 'border-r border-line' : ''}`}>
-              <div className="font-mono text-[8px] uppercase tracking-[0.3em] text-ink-3">{label}</div>
-              <div className="font-display font-semibold text-[15px] uppercase tabular-nums leading-tight mt-0.5">{value}</div>
+            <div key={label} className={i ? 'pl-3 border-l border-line-soft' : ''}>
+              <div className="text-[14px] text-ink-2">{label}</div>
+              <div className="font-display font-semibold text-[21px] tabular-nums leading-tight mt-0.5">{value}</div>
             </div>
           ))}
         </div>

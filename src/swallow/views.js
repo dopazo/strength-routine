@@ -6,14 +6,14 @@ import { FRONT_CLIPS, FRONT_LAYERS, FRONT_VIEWBOX, computeFront, frontAnchors } 
 // los parámetros de la pose.
 export const VIEWS = {
   side: {
-    label: 'Corte',
+    label: 'Por dentro',
     viewBox: SIDE_VIEWBOX,
     layers: SIDE_LAYERS,
     compute: computeSide,
     anchors: sideAnchors,
   },
   front: {
-    label: 'Frente',
+    label: 'De frente',
     viewBox: FRONT_VIEWBOX,
     layers: FRONT_LAYERS,
     clips: FRONT_CLIPS,

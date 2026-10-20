@@ -6,7 +6,6 @@ import { lerpParams, sampleExercise } from '../../swallow/motion.js';
 import { EASE } from '../../animation/easing.js';
 
 const XFADE_MS = 450;
-const VIEW_TITLE = { side: 'CORTE LATERAL', front: 'DE FRENTE' };
 
 // Escribe el HUD directo en el DOM (cada frame, sin re-render de React) y
 // solo cuando cambia algún valor.
@@ -35,6 +34,9 @@ function createWriter() {
 //   params     — parámetros fijos (modo 'params')
 //   fixedTime  — congela el tiempo (capturas del Head Lab)
 //   initialView — vista inicial ('side' | 'front'); la persona puede cambiarla
+// Tamaño de los rótulos de la lámina, en px de pantalla.
+const LABEL_PX = 12.5;
+
 export function HeadViewer({
   exerciseId = null, mode = 'demo', modeKey = '', clockStart = null, pausedAt = null, duration = 0,
   params = null, fixedTime = null, showHud = true, label = null, initialView = null,
@@ -135,9 +137,9 @@ export function HeadViewer({
           g.dot.setAttribute('cy', a.y.toFixed(2));
           g.dot.style.display = spec.inside ? 'none' : '';
           g.text.setAttribute('x', (tx + (spec.align === 'start' ? 1.5 : spec.align === 'end' ? -1.5 : 0)).toFixed(2));
-          g.text.setAttribute('y', (ty + 9 / scale * 0.36).toFixed(2));
+          g.text.setAttribute('y', (ty + LABEL_PX / scale * 0.36).toFixed(2));
           if (st.dirtyFont) {
-            g.text.setAttribute('font-size', (9 / scale).toFixed(2));
+            g.text.setAttribute('font-size', (LABEL_PX / scale).toFixed(2));
             g.text.setAttribute('stroke-width', (3 / scale).toFixed(2));
             g.dot.setAttribute('r', (2 / scale).toFixed(2));
             g.line.setAttribute('stroke-width', (1 / scale).toFixed(2));
@@ -204,8 +206,9 @@ export function HeadViewer({
                   stroke="#100F0C"
                   strokeOpacity="0.75"
                   paintOrder="stroke"
-                  fontFamily="DM Mono, ui-monospace, monospace"
-                  letterSpacing="0.12em"
+                  fontFamily="IBM Plex Sans, system-ui, sans-serif"
+                  fontWeight="600"
+                  letterSpacing="0.02em"
                   style={{ textTransform: 'uppercase' }}
                 >
                   {spec.text}
@@ -217,18 +220,20 @@ export function HeadViewer({
       })}
       {showHud && (
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-2 left-3 font-mono text-[9px] tracking-[0.25em] text-ink/40 uppercase">
-            {label ?? 'Lámina'} · {VIEW_TITLE[view] ?? ''}
-          </div>
+          {views.length === 1 && (
+            <div className="absolute top-3 left-4 text-[14px] font-medium text-ink-2">
+              {label ? `${label} · ` : ''}{VIEWS[view].label}
+            </div>
+          )}
           {views.length > 1 && (
-            <div className="pointer-events-auto absolute top-1.5 right-2 flex border border-ink/30 bg-scope/70">
+            <div className="pointer-events-auto absolute top-2.5 right-2.5 flex p-1 rounded-full border border-white/15 bg-scope/75 backdrop-blur-sm">
               {views.map((v) => (
                 <button
                   key={v}
                   type="button"
                   onClick={() => setView(v)}
                   aria-pressed={v === view}
-                  className={`px-2 py-1 font-mono text-[9px] uppercase tracking-[0.2em] transition-colors ${
+                  className={`px-3 py-1 rounded-full text-[15px] font-semibold transition-colors ${
                     v === view ? 'bg-ink text-paper' : 'text-ink-2 hover:text-ink'
                   }`}
                 >
@@ -237,18 +242,18 @@ export function HeadViewer({
               ))}
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-scope/85 to-transparent" />
-          <div ref={ref('sides')} className="absolute inset-x-3 bottom-6 flex justify-between transition-opacity duration-300" style={{ opacity: 0 }}>
-            <span ref={ref('left')} className="font-mono text-[10px] tracking-[0.25em] px-1.5 py-0.5 border">IZQ</span>
-            <span ref={ref('right')} className="font-mono text-[10px] tracking-[0.25em] px-1.5 py-0.5 border">DER</span>
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-scope/90 to-transparent" />
+          <div ref={ref('sides')} className="absolute inset-x-3 bottom-10 flex justify-between transition-opacity duration-300" style={{ opacity: 0 }}>
+            <span ref={ref('left')} className="text-[15px] font-bold px-2.5 py-0.5 rounded-full border-2">Izquierda</span>
+            <span ref={ref('right')} className="text-[15px] font-bold px-2.5 py-0.5 rounded-full border-2">Derecha</span>
           </div>
           <span
             ref={ref('cue')}
-            className="absolute left-3 right-3 bottom-[13px] font-mono text-[10px] font-medium tracking-[0.3em] uppercase text-center"
+            className="absolute left-4 right-4 bottom-[18px] text-[18px] font-bold tracking-[0.06em] uppercase text-center"
           />
           <div
             ref={ref('barWrap')}
-            className="absolute left-3 right-3 bottom-[7px] h-[3px] bg-ink/10 transition-opacity duration-300"
+            className="absolute left-4 right-4 bottom-[10px] h-[5px] rounded-full overflow-hidden bg-ink/20 transition-opacity duration-300"
             style={{ opacity: 0 }}
           >
             <div ref={ref('bar')} className="h-full w-full origin-left bg-ink-2" style={{ transform: 'scaleX(0)' }} />

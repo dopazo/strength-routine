@@ -31,13 +31,16 @@ export const SWALLOW_ROUTINE = [
 
 // Texto corto de la dosis (lista y encabezados).
 export function dosage(item) {
-  if (item.maxSec) return `${Math.round(item.workSec / 60)}–${Math.round(item.maxSec / 60)} MIN`;
-  if (item.reps) return item.sets > 1 ? `${item.sets}×${item.reps}` : `${item.reps} REPS`;
-  return `${item.sets}×${item.workSec}S`;
+  if (item.maxSec) return `${Math.round(item.workSec / 60)}–${Math.round(item.maxSec / 60)} min`;
+  if (item.reps) return item.sets > 1 ? `${item.sets} × ${item.reps}` : `${item.reps} repeticiones`;
+  return `${item.sets} × ${item.workSec} s`;
 }
 
-// Frecuencia de la pauta en texto corto ("2×día", "3–4×día").
-export const perDayLabel = (item) => `${item.minPerDay ? `${item.minPerDay}–` : ''}${item.perDay}×día`;
+// Frecuencia de la pauta en texto corto ("2 veces al día", "3–4 veces al día").
+export const perDayLabel = (item) => {
+  const n = `${item.minPerDay ? `${item.minPerDay}–` : ''}${item.perDay}`;
+  return n === '1' ? '1 vez al día' : `${n} veces al día`;
+};
 
 // Veces que se hizo hoy (`day` = registro del día, ver swallow/log.js). La
 // masticación cuenta cuando llegó al mínimo de minutos.

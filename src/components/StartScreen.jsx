@@ -2,20 +2,27 @@ import React, { useCallback, useState } from 'react';
 import { ROUTINE, TOTAL_DURATION } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { ExercisePreview } from './ExercisePreview.jsx';
+import { RowChevron } from './PreviewModal.jsx';
 import { SwallowHome } from './swallow/SwallowHome.jsx';
-
-const pad2 = (n) => String(n).padStart(2, '0');
+import { useTheme } from '../theme.js';
+import { Hero, HeroStats, SectionTitle } from './ui.jsx';
 
 const PROGRAMS = [
   { id: 'fuerza', label: 'Fuerza' },
   { id: 'deglucion', label: 'Deglución' },
 ];
 
-// Selector de programa: rutina de fuerza o ejercicios de deglución.
+// Selector de programa: control segmentado con un indicador que se desliza.
 function ProgramTabs({ value, onChange }) {
+  const idx = Math.max(0, PROGRAMS.findIndex((p) => p.id === value));
   return (
-    <div role="tablist" aria-label="Programa" className="grid grid-cols-2 border border-line mb-6">
-      {PROGRAMS.map((p, i) => {
+    <div role="tablist" aria-label="Programa" className="relative grid grid-cols-2 p-1.5 mb-5 rounded-[1.1rem] bg-paper-2 border border-line-soft">
+      <div
+        className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-[0.8rem] bg-surface shadow-[var(--elev-2)] transition-transform duration-300 ease-[cubic-bezier(0.3,0.7,0.2,1)]"
+        style={{ transform: `translateX(${idx * 100}%)` }}
+        aria-hidden="true"
+      />
+      {PROGRAMS.map((p) => {
         const active = p.id === value;
         return (
           <button
@@ -24,12 +31,11 @@ function ProgramTabs({ value, onChange }) {
             role="tab"
             aria-selected={active}
             onClick={() => onChange(p.id)}
-            className={`py-2.5 flex items-baseline justify-center gap-2 transition-colors ${
-              i === 0 ? 'border-r border-line' : ''
-            } ${active ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-paper-2 hover:text-ink'}`}
+            className={`relative py-3 font-display font-semibold text-[19px] uppercase tracking-[0.08em] transition-colors ${
+              active ? 'text-ink' : 'text-ink-2 hover:text-ink'
+            }`}
           >
-            <span className="font-mono text-[9px] tracking-[0.3em] opacity-60 tabular-nums">{pad2(i + 1)}</span>
-            <span className="font-display font-semibold text-[14px] uppercase tracking-[0.2em]">{p.label}</span>
+            {p.label}
           </button>
         );
       })}
@@ -37,14 +43,43 @@ function ProgramTabs({ value, onChange }) {
   );
 }
 
+function ThemeIcon({ dark }) {
+  return dark ? (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" />
+      <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+    </svg>
+  ) : (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+    </svg>
+  );
+}
+
+function ThemeToggle() {
+  const [theme, toggle] = useTheme();
+  const dark = theme === 'oscuro';
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="mt-8 mx-auto flex items-center justify-center gap-2 px-3 py-2 text-ink-2 text-[16px] font-medium underline-offset-4 hover:underline hover:text-ink"
+    >
+      <ThemeIcon dark={dark} />
+      {dark ? 'Usar colores claros' : 'Usar modo oscuro'}
+    </button>
+  );
+}
+
 export function StartScreen({ program, onProgram, onStart, onStartSwallow }) {
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col items-center px-5 py-7 font-sans">
+    <div className="min-h-screen app-bg text-ink flex flex-col items-center px-4 py-5 font-sans">
       <div className="w-full max-w-md">
         <ProgramTabs value={program} onChange={onProgram} />
         {program === 'deglucion'
-          ? <SwallowHome onStart={onStartSwallow} />
-          : <StrengthHome onStart={onStart} />}
+          ? <SwallowHome key="deglucion" onStart={onStartSwallow} />
+          : <StrengthHome key="fuerza" onStart={onStart} />}
+        <ThemeToggle />
       </div>
     </div>
   );
@@ -63,96 +98,64 @@ function StrengthHome({ onStart }) {
     groups[phaseIndex.get(r.phase)].items.push({ ...r, dorsal: i + 1 });
   });
 
-  const totalSets = ROUTINE.reduce((s, r) => s + r.sets, 0);
   const minutes = Math.round(TOTAL_DURATION / 60);
+  const totalSets = ROUTINE.reduce((s, r) => s + r.sets, 0);
 
   return (
     <>
-      <div className="flex items-baseline justify-between">
-        <span className="font-mono text-[10px] tracking-[0.32em] text-blaze uppercase">Banda Elástica</span>
-        <span className="font-mono text-[10px] tracking-[0.3em] text-ink-3 uppercase">Programa · 01</span>
-      </div>
-      <h1 className="font-display font-bold text-[44px] uppercase tracking-tight leading-[0.95] mt-2">
-        Rutina<br/>de fuerza
-      </h1>
-      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3 mt-3">
-        Plan completo · cuerpo entero
-      </div>
+      <Hero kicker="Banda elástica" title="Rutina de fuerza">
+        <p className="text-[17px] leading-snug text-ink-2 mt-3">
+          La app te guía paso a paso y te avisa con sonidos.
+        </p>
+        <HeroStats items={[[minutes, 'minutos'], [ROUTINE.length, 'ejercicios'], [totalSets, 'series']]} />
+        <button
+          onClick={onStart}
+          className="btn-primary w-full mt-4 py-[18px] font-display font-semibold uppercase tracking-[0.12em] text-[22px]"
+        >
+          Comenzar rutina
+        </button>
+        <p className="text-[15px] text-ink-2 text-center mt-3">
+          Necesitas una banda elástica plana y espacio para moverte.
+        </p>
+      </Hero>
 
-      <div className="grid grid-cols-3 mt-5 mb-7 border border-line">
-        <div className="p-3 border-r border-line">
-          <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Duración</div>
-          <div className="flex items-baseline gap-1 mt-1.5 leading-none">
-            <span className="font-display font-bold text-3xl tabular-nums">{minutes}</span>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-ink-3">min</span>
-          </div>
-        </div>
-        <div className="p-3 border-r border-line">
-          <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Ejercicios</div>
-          <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">{ROUTINE.length}</div>
-        </div>
-        <div className="p-3">
-          <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3">Series</div>
-          <div className="font-display font-bold text-3xl tabular-nums mt-1.5 leading-none">{totalSets}</div>
-        </div>
-      </div>
-
-      <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mb-3">
-        Toca un ejercicio para ver su animación
-      </div>
-      <div className="space-y-4 mb-7">
-        {groups.map(({ phase, items }) => (
-          <div key={phase}>
-            <div className="flex items-baseline justify-between pb-1.5 mb-1 border-b border-line">
-              <span className="font-display font-semibold text-[15px] uppercase tracking-[0.12em] text-ink">
-                {phase}
-              </span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ink-3 tabular-nums">
-                {items.length} {items.length === 1 ? 'EJER' : 'EJER'}
-              </span>
-            </div>
+      <SectionTitle title="Los ejercicios" hint="Toca uno para ver cómo se hace." />
+      <div className="space-y-4">
+        {groups.map(({ phase, items }, g) => (
+          <section key={phase} className="rise" style={{ '--i': g }}>
+            <h3 className="flex items-center gap-3 text-[15px] font-bold text-blaze px-1">
+              {phase}
+              <span className="flex-1 h-px bg-line-soft" aria-hidden="true" />
+            </h3>
             <ul>
               {items.map((item) => {
                 const ex = EXERCISES[item.exerciseId];
                 return (
-                  <li key={item.dorsal} className="border-b border-line/50 last:border-b-0">
+                  <li key={item.dorsal} className="border-b border-line-soft last:border-b-0">
                     <button
                       type="button"
                       onClick={() => setPreview(item)}
-                      className="w-full flex items-center gap-3 py-2 text-left hover:bg-paper-2 active:bg-paper-2 transition-colors"
-                      aria-label={`Ver vista previa de ${ex.name}`}
+                      className="w-full flex items-center gap-3 px-1 py-3 text-left rounded-lg hover:bg-paper-2/60 active:bg-paper-2 transition-colors"
+                      aria-label={`Ver cómo se hace: ${ex.name}`}
                     >
-                      <span className="font-display font-semibold text-[15px] text-ink-2 tabular-nums w-7 leading-none">
-                        {pad2(item.dorsal)}
+                      <span className="w-8 shrink-0 font-display font-semibold text-[26px] leading-none text-ink-3 tabular-nums">
+                        {String(item.dorsal).padStart(2, '0')}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[14px] leading-tight truncate">{ex.name}</div>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-ink-3 mt-0.5 truncate">
-                          {ex.muscles}
+                        <div className="text-[18px] font-semibold leading-tight">{ex.name}</div>
+                        <div className="text-[15px] text-ink-2 mt-0.5 leading-snug">
+                          {ex.muscles} · {item.sets} series
                         </div>
                       </div>
-                      <div className="font-mono text-[11px] text-ink-2 tabular-nums whitespace-nowrap">
-                        {item.sets}×{item.workSec}S
-                      </div>
+                      <RowChevron />
                     </button>
                   </li>
                 );
               })}
             </ul>
-          </div>
+          </section>
         ))}
       </div>
-
-      <button
-        onClick={onStart}
-        className="w-full bg-blaze hover:bg-[#f06028] text-ink py-4 font-display font-semibold uppercase tracking-[0.25em] text-[15px] flex items-center justify-center gap-3 transition-colors"
-      >
-        <span>Comenzar rutina</span>
-        <span className="font-mono text-xs translate-y-[-1px]">››</span>
-      </button>
-      <p className="font-mono text-[9px] text-ink-3 text-center mt-3 uppercase tracking-[0.22em]">
-        Necesitas · banda elástica plana · espacio para moverte
-      </p>
       {preview && <ExercisePreview item={preview} onClose={closePreview} />}
     </>
   );

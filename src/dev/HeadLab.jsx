@@ -47,11 +47,11 @@ export function HeadLab() {
       showHud={!url.has('nohud')}
     />
   );
-  if (capture) return <div className="relative w-screen h-screen bg-scope">{viewer}</div>;
+  if (capture) return <div className="scope-dark relative w-screen h-screen bg-scope">{viewer}</div>;
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col md:flex-row">
-      <div className="relative h-[60vh] md:h-screen md:flex-1 bg-scope border-b md:border-b-0 md:border-r border-line">{viewer}</div>
+      <div className="scope-dark relative h-[60vh] md:h-screen md:flex-1 bg-scope border-b md:border-b-0 md:border-r border-line">{viewer}</div>
       <div className="md:w-[360px] p-4 space-y-2 overflow-y-auto md:h-screen">
         <div className="font-mono text-[10px] tracking-[0.3em] text-blaze uppercase">Head Lab · dev</div>
         <select
