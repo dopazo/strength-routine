@@ -72,8 +72,9 @@ export function createExerciseScene(container, { onFrame } = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY[0].dpr));
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true; // el primer frame ya necesita el mapa listo
   let shadowTick = 0;
   const canvas = renderer.domElement;
   canvas.style.display = 'block';
@@ -149,6 +150,7 @@ export function createExerciseScene(container, { onFrame } = {}) {
       key.shadow.mapSize.set(q.mapSize, q.mapSize);
       key.shadow.map?.dispose();
       key.shadow.map = null;
+      renderer.shadowMap.needsUpdate = true;
     }
   }
   function monitorPerformance(rawDt) {

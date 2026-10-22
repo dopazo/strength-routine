@@ -19,7 +19,7 @@ Target users include older adults (≈60+) who may not see well and are not tech
 
 ## Stack & commands
 
-Vite 6 + React 19 + Tailwind CSS v4 (`@tailwindcss/vite` plugin) + Three.js. Bun is the runtime/package manager.
+Vite 8 + React 19 + Tailwind CSS v4 (`@tailwindcss/vite` plugin) + Three.js. Bun is the runtime/package manager.
 
 - `bun install` — install deps
 - `bun run dev` — Vite dev server (http://localhost:5173)
