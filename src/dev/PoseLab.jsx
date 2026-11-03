@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ExerciseViewer } from '../components/ExerciseViewer.jsx';
 import { EXERCISES } from '../data/exercises.js';
 import { POSES } from '../data/poses.js';
-import { ROUTINE, TRANSITION_SEC } from '../data/routine.js';
+import { ROUTINE, transitionAfter } from '../data/routine.js';
 import { buildRepPlan } from '../animation/tempo.js';
 
 // Pose Lab: herramienta solo de desarrollo (`bun run dev` → `?lab`).
@@ -87,7 +87,7 @@ export function PoseLab() {
   const plan = useMemo(() => buildRepPlan(EXERCISES[exerciseId]), [exerciseId]);
   const phaseDuration = mode === 'work' ? routine.workSec
     : mode === 'rest' ? routine.restSec
-      : mode === 'transition' ? TRANSITION_SEC : plan.repDuration;
+      : mode === 'transition' ? transitionAfter(ROUTINE.indexOf(routine)) || 30 : plan.repDuration;
   const editedPose = useMemo(() => degToPose(edit), [edit]);
 
   const choosePose = (id) => {

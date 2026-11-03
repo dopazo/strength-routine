@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { formatTime } from '../utils.js';
-import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES, TRANSITION_SEC } from '../data/routine.js';
+import { ROUTINE, TOTAL_DURATION, EXERCISE_BOUNDARIES, transitionAfter } from '../data/routine.js';
 import { EXERCISES } from '../data/exercises.js';
 import { loadViewer } from './viewerLoader.js';
 import { ExerciseInfo } from './ui.jsx';
@@ -75,7 +75,7 @@ export function WorkoutScreen({ state, dispatch }) {
   const phaseStyle = PHASE_STYLE[state.phase];
   const phaseDuration = state.phase === 'work'
     ? current.workSec
-    : state.phase === 'rest' ? current.restSec : TRANSITION_SEC;
+    : state.phase === 'rest' ? current.restSec : transitionAfter(state.exerciseIdx);
 
   const repsText = `${String(current.reps).replace('-', '–')} repeticiones`;
   let contextLine;

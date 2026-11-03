@@ -1,4 +1,4 @@
-import { ROUTINE, TRANSITION_SEC, TOTAL_DURATION } from '../data/routine.js';
+import { ROUTINE, TOTAL_DURATION, transitionAfter } from '../data/routine.js';
 
 export function getInitialState() {
   return {
@@ -17,7 +17,7 @@ function elapsedAt(exerciseIdx, set, phase) {
   let e = 0;
   for (let i = 0; i < exerciseIdx; i++) {
     const r = ROUTINE[i];
-    e += r.sets * r.workSec + (r.sets - 1) * r.restSec + TRANSITION_SEC;
+    e += r.sets * r.workSec + (r.sets - 1) * r.restSec + transitionAfter(i);
   }
   const r = ROUTINE[exerciseIdx];
   if (phase === 'work') {
@@ -35,7 +35,7 @@ function jumpTo(state, exerciseIdx, set, phase) {
   let timeRemaining;
   if (phase === 'work') timeRemaining = r.workSec;
   else if (phase === 'rest') timeRemaining = r.restSec;
-  else timeRemaining = TRANSITION_SEC;
+  else timeRemaining = transitionAfter(exerciseIdx);
   return {
     ...state,
     exerciseIdx,
@@ -56,7 +56,7 @@ function advancePhase(state) {
     if (state.exerciseIdx >= ROUTINE.length - 1) {
       return { ...state, isComplete: true, isPaused: true, timeRemaining: 0 };
     }
-    return { ...state, phase: 'transition', timeRemaining: TRANSITION_SEC };
+    return { ...state, phase: 'transition', timeRemaining: transitionAfter(state.exerciseIdx) };
   }
   if (state.phase === 'rest') {
     return { ...state, phase: 'work', set: state.set + 1, timeRemaining: ex.workSec };
