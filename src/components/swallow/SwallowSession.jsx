@@ -4,13 +4,15 @@ import { dosage, timesToday } from '../../data/swallowRoutine.js';
 import { stageElapsed } from '../../state/swallowReducer.js';
 import { sampleExercise } from '../../swallow/motion.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
-import { playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from '../../audio/beeps.js';
+import { playEnd, playEndTick, playSideChange, playStart } from '../../audio/beeps.js';
 import { formatTime } from '../../utils.js';
 import { LazyHeadViewer } from './headLoader.js';
 import { Loading } from './SwallowPreview.jsx';
 import { ExerciseInfo } from '../ui.jsx';
 
 const RELEASE_CUES = new Set(['SUELTA', 'RELAJA']);
+// Indicaciones que marcan el inicio del esfuerzo dentro de una repetición.
+const EFFORT_START = { EMPUJA: null, TRAGA: 'LENGUA AFUERA' };
 
 function PrevIcon() {
   return (
@@ -52,8 +54,10 @@ function useWakeLock(active) {
   }, [active]);
 }
 
-// Pitidos guía: aguantar, cada segundo de la cuenta, soltar; últimos
-// segundos de una serie; mínimo de masticación y cambio de lado.
+// Señales guía (sonido + vibración): al empezar a aguantar o empujar, "ti-ding"
+// que sube; cada segundo de la cuenta y los últimos 3 s de una serie,
+// golpecitos que bajan; al soltar o terminar la serie, "ding-dong"; mínimo de
+// masticación cumplido y cambio de lado.
 function useBeeps(state, sample, elapsed, item) {
   const prev = useRef({});
   useEffect(() => {
@@ -69,16 +73,17 @@ function useBeeps(state, sample, elapsed, item) {
       stage: state.stage,
     };
     if (p.key === key && state.pausedAt == null) {
-      if (cur.digit != null && p.digit == null) playPhaseChangeBeep();
-      else if (cur.digit != null && p.digit != null && cur.digit < p.digit) playCountdownBeep();
-      if (cur.cue !== p.cue && RELEASE_CUES.has(cur.cue)) playPhaseChangeBeep();
-      if (cur.cue === 'TRAGA' && p.cue === 'LENGUA AFUERA') playCountdownBeep();
-      if (cur.left != null && p.left != null && cur.left < p.left && cur.left >= 1 && cur.left <= 3) playCountdownBeep();
-      if (cur.side && p.side && cur.side !== p.side) playSkipBeep();
-      if (cur.min && !p.min) playPhaseChangeBeep();
+      const cueChanged = cur.cue !== p.cue;
+      if (cur.digit != null && p.digit == null) playStart();
+      else if (cur.digit != null && p.digit != null && cur.digit < p.digit) playEndTick(cur.digit);
+      if (cueChanged && cur.cue in EFFORT_START && (EFFORT_START[cur.cue] ?? p.cue) === p.cue) playStart();
+      if (cueChanged && RELEASE_CUES.has(cur.cue)) playEnd();
+      if (cur.left != null && p.left != null && cur.left < p.left && cur.left >= 1 && cur.left <= 3) playEndTick(cur.left);
+      if (cur.side && p.side && cur.side !== p.side) playSideChange();
+      if (cur.min && !p.min) playEnd();
     } else if (p.stage === 'work' && cur.stage !== 'work') {
       // Terminó la serie por tiempo.
-      playPhaseChangeBeep();
+      playEnd();
     }
     prev.current = cur;
   });
