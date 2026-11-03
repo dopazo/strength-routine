@@ -3,7 +3,7 @@ import { workoutReducer, getInitialState } from './state/workoutReducer.js';
 import { StartScreen } from './components/StartScreen.jsx';
 import { CompleteScreen } from './components/CompleteScreen.jsx';
 import { WorkoutScreen } from './components/WorkoutScreen.jsx';
-import { ensureAudio, playCountdownBeep, playPhaseChangeBeep, playSkipBeep } from './audio/beeps.js';
+import { ensureAudio, playEnd, playEndTick, playFinish, playSkip, playStart, playStartTick } from './audio/beeps.js';
 import { preloadViewerWhenIdle } from './components/viewerLoader.js';
 import { initialSwallowState, swallowReducer } from './state/swallowReducer.js';
 import { SWALLOW_ROUTINE, sessionItems } from './data/swallowRoutine.js';
@@ -35,6 +35,7 @@ export default function App() {
   const beepRef = useRef({
     timeRemaining: state.timeRemaining,
     key: `${state.exerciseIdx}-${state.set}-${state.phase}`,
+    complete: state.isComplete,
   });
 
   const dispatch = useCallback((action) => {
@@ -74,32 +75,35 @@ export default function App() {
     return () => clearInterval(interval);
   }, [state.isStarted, state.isPaused, state.isComplete]);
 
+  // Señales (sonido + vibración): al empezar un trabajo, "ti-ding" que sube;
+  // al pasar a descanso, "ding-dong" que baja. Los últimos 3 s cuentan con
+  // golpecitos que suben si viene un trabajo y bajan si el trabajo termina.
   useEffect(() => {
-    if (!state.isStarted || state.isComplete) {
-      beepRef.current = {
-        timeRemaining: state.timeRemaining,
-        key: `${state.exerciseIdx}-${state.set}-${state.phase}`,
-      };
-      return;
-    }
     const currKey = `${state.exerciseIdx}-${state.set}-${state.phase}`;
     const prev = beepRef.current;
+    const next = { timeRemaining: state.timeRemaining, key: currKey, complete: state.isComplete };
+    beepRef.current = next;
+    if (!state.isStarted) return;
+    if (state.isComplete) {
+      if (!prev.complete) playFinish();
+      return;
+    }
     if (prev.key !== currKey) {
       const justSkipped = Date.now() - lastSkipAtRef.current < 200;
       if (justSkipped) {
-        playSkipBeep();
+        playSkip();
         lastSkipAtRef.current = 0;
+      } else if (state.phase === 'work') {
+        playStart();
       } else {
-        playPhaseChangeBeep();
+        playEnd();
       }
     } else if (!state.isPaused) {
       const p = prev.timeRemaining;
       const c = state.timeRemaining;
-      if (p > 3 && c <= 3) playCountdownBeep();
-      if (p > 2 && c <= 2) playCountdownBeep();
-      if (p > 1 && c <= 1) playCountdownBeep();
+      const tick = state.phase === 'work' ? playEndTick : playStartTick;
+      for (const n of [3, 2, 1]) if (p > n && c <= n) tick(n);
     }
-    beepRef.current = { timeRemaining: state.timeRemaining, key: currKey };
   }, [
     state.timeRemaining,
     state.exerciseIdx,

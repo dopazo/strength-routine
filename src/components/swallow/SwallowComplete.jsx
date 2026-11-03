@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SWALLOW_ROUTINE, isMet, sessionItems, timesToday } from '../../data/swallowRoutine.js';
 import { getDay, useSwallowLog } from '../../swallow/log.js';
 import { formatTime } from '../../utils.js';
 import { Progress } from './Progress.jsx';
 import { DoneMark } from '../ui.jsx';
+import { playFinish } from '../../audio/beeps.js';
 
 // Pantalla final de la sesión de deglución: lo que se hizo y cómo va el día
 // según la pauta.
@@ -12,6 +13,10 @@ export function SwallowComplete({ state, onHome }) {
   const day = getDay();
   const total = (state.endedAt - state.startedAt) / 1000;
   const pending = sessionItems(day);
+
+  useEffect(() => {
+    playFinish();
+  }, []);
 
   return (
     <div className="min-h-[100dvh] app-bg text-ink flex flex-col items-center justify-center px-5 py-8 font-sans">
